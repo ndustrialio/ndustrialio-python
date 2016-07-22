@@ -1,5 +1,6 @@
 import requests
 
+
 API_VERSION = 'v1'
 
 BASE_URL = 'http://api.ndustrial.io'
@@ -63,83 +64,88 @@ class ApiRequest(object):
     URLENCODED_CONTENT_TYPE = 'application/x-www-form-urlencoded'
     JSON_CONTENT_TYPE = 'application/json';
 
-    def __init__(self, uri, base_url=None):
+    def __init__(self, uri):
 
         self.uri = uri
 
-        if base_url is None:
-            self.base_url = BASE_URL
-        else:
-            self.base_url = base_url
+        self.http_base_url = None
 
         # authorize request, default true
-        self.auth = True
+        self.authorize_request = True
 
-        self.content_type=self.JSON_CONTENT_TYPE
+        self.http_content_type=self.JSON_CONTENT_TYPE
 
-        self.params=None
+        self.http_params=None
 
-        self.version = True
+        self.api_version = True
 
-        self.method = None
+        self.http_method = None
 
-        self.body = None
+        self.http_body = None
 
 
     def params(self, params=None):
 
         if not params:
-            return self.params
+            return self.http_params
         else:
-            self.params = params
+            self.http_params = params
             return self
 
     def authorize(self, authorize=None):
 
         if not authorize:
-            return self.auth
+            return self.authorize_request
         else:
-            self.auth = authorize
+            self.authorize_request = authorize
+
+            return self
+
+    def base_url(self, base_url=None):
+        if not base_url:
+            return self.http_base_url
+        else:
+            self.http_base_url = base_url
 
             return self
 
     def version(self, version=None):
 
         if not version:
-            return self.version
+            return self.api_version
         else:
-            self.version = version
+            self.api_version = version
             return self
 
     def method(self, method=None):
         if not method:
-            return self.method
+            return self.http_method
         else:
-            self.method = method
+            self.http_method = method
             return self
 
     def content_type(self, content_type=None):
 
         if not content_type:
-            return self.content_type
+            return self.http_content_type
         else:
-            self.content_type = content_type
+            self.http_content_type = content_type
             return self
 
     def body(self, body=None):
         if not body:
-            return self.body
+            return self.http_body
         else:
-            self.body = body
+            self.http_body = body
             return self
 
     def __str__(self):
 
         request_chunks = []
 
-        request_chunks.append(self.base_url)
+        request_chunks.append(self.http_base_url)
 
-        if self.version:
+        if self.api_version:
             request_chunks.append(API_VERSION)
 
         request_chunks.append(self.uri)
@@ -149,9 +155,9 @@ class ApiRequest(object):
 
 class GET(ApiRequest):
 
-    def __init__(self, uri, base_uri=None):
+    def __init__(self, uri):
 
-        super(GET, self).__init__(uri, base_uri)
+        super(GET, self).__init__(uri)
 
     def method(self, method=None):
 
@@ -159,9 +165,9 @@ class GET(ApiRequest):
 
 class POST(ApiRequest):
 
-    def __init__(self, uri, base_uri=None):
+    def __init__(self, uri):
 
-        super(POST, self).__init__(uri, base_uri)
+        super(POST, self).__init__(uri)
 
     def method(self, method=None):
 
@@ -169,9 +175,9 @@ class POST(ApiRequest):
 
 class PUT(ApiRequest):
 
-    def __init__(self, uri, base_uri=None):
+    def __init__(self, uri):
 
-        super(PUT, self).__init__(uri, base_uri)
+        super(PUT, self).__init__(uri)
 
     def method(self, method=None):
 
@@ -179,19 +185,28 @@ class PUT(ApiRequest):
 
 class DELETE(ApiRequest):
 
-    def __init__(self, uri, base_uri=None):
+    def __init__(self, uri):
 
-        super(DELETE, self).__init__(uri, base_uri)
+        super(DELETE, self).__init__(uri)
 
     def method(self, method=None):
 
         return 'DELETE'
+
 
 class APIService(object):
 
     def __init__(self, client):
 
         self.client = client
+
+    def baseURL(self):
+
+        return BASE_URL
+
+    def execute(self, api_request):
+
+        return self.client.execute(api_request.base_url(self.baseURL()))
 
 
 class ServiceInitializer(object):
