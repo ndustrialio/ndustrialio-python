@@ -34,7 +34,7 @@ class ApiClient(object):
             headers['Authorization'] = 'Bearer ' + self.access_token
 
         if api_request.method() == 'GET':
-            response=requests.get(url=str(api_request), params=api_request.params(), headers=headers)
+            response=requests.get(url=str(api_request), headers=headers)
         if api_request.method() == 'POST':
             if api_request.content_type == ApiRequest.URLENCODED_CONTENT_TYPE:
                 response = requests.post(url=str(api_request), data=api_request.body(), headers=headers)
@@ -62,7 +62,7 @@ class ApiClient(object):
 class ApiRequest(object):
 
     URLENCODED_CONTENT_TYPE = 'application/x-www-form-urlencoded'
-    JSON_CONTENT_TYPE = 'application/json';
+    JSON_CONTENT_TYPE = 'application/json'
 
     def __init__(self, uri):
 
@@ -75,18 +75,18 @@ class ApiRequest(object):
 
         self.http_content_type=self.JSON_CONTENT_TYPE
 
-        self.http_params=None
+        self.http_params={}
 
         self.api_version = True
 
         self.http_method = None
 
-        self.http_body = None
+        self.http_body = {}
 
 
     def params(self, params=None):
 
-        if not params:
+        if params is None:
             return self.http_params
         else:
             self.http_params = params
@@ -94,7 +94,7 @@ class ApiRequest(object):
 
     def authorize(self, authorize=None):
 
-        if not authorize:
+        if authorize is None:
             return self.authorize_request
         else:
             self.authorize_request = authorize
@@ -102,7 +102,7 @@ class ApiRequest(object):
             return self
 
     def base_url(self, base_url=None):
-        if not base_url:
+        if base_url is None:
             return self.http_base_url
         else:
             self.http_base_url = base_url
@@ -111,14 +111,14 @@ class ApiRequest(object):
 
     def version(self, version=None):
 
-        if not version:
+        if version is None:
             return self.api_version
         else:
             self.api_version = version
             return self
 
     def method(self, method=None):
-        if not method:
+        if method is None:
             return self.http_method
         else:
             self.http_method = method
@@ -126,14 +126,14 @@ class ApiRequest(object):
 
     def content_type(self, content_type=None):
 
-        if not content_type:
+        if content_type is None:
             return self.http_content_type
         else:
             self.http_content_type = content_type
             return self
 
     def body(self, body=None):
-        if not body:
+        if body is None:
             return self.http_body
         else:
             self.http_body = body
@@ -150,7 +150,24 @@ class ApiRequest(object):
 
         request_chunks.append(self.uri)
 
-        return '/'.join(request_chunks)
+
+        # append params
+        if self.http_params:
+            param_string='?'
+
+            param_list = []
+
+            for p, v in self.http_params.iteritems():
+                param_list.append(p+'='+str(v))
+
+            param_string += '&'.join(param_list)
+
+            request_string = '/'.join(request_chunks) + param_string
+
+        else:
+            request_string = '/'.join(request_chunks)
+
+        return request_string
 
 
 class GET(ApiRequest):
@@ -204,10 +221,16 @@ class APIService(object):
 
         return BASE_URL
 
-    def execute(self, api_request):
+    def execute(self, api_request, execute=True):
 
-        return self.client.execute(api_request.base_url(self.baseURL()))
+        if execute:
 
+            result = self.client.execute(api_request.base_url(self.baseURL()))
+
+            return result
+
+        else:
+            return api_request.base_url(self.baseURL())
 
 class ServiceInitializer(object):
 
@@ -223,3 +246,28 @@ class ServiceInitializer(object):
     def init_service(self, service_class):
 
         return service_class(self.client)
+
+
+class BatchService(APIService):
+
+    def __init__(self, client):
+
+        super(BatchService, self).__init__(client)
+
+
+    def batchRequest(self, requests):
+
+        batch_data = {}
+
+        for request_label, request in requests.iteritems():
+
+            r = {'method': request.method(),
+                 'uri': str(request)}
+
+            # attach body.. must be JSON content type
+            if r['method'] == 'POST':
+                r['body'] = request.body()
+
+            batch_data[request_label] = r
+
+        return self.execute(POST(uri='batch').body(body=batch_data))
