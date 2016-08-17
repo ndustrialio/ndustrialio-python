@@ -13,7 +13,7 @@ class FacilityService(APIService):
         if id is None:
             uri='facilities'
         else:
-            uri='facilities'+str(id)
+            uri='facilities/'+str(id)
 
         return self.execute(GET(uri=uri), execute)
 
