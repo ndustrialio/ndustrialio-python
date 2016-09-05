@@ -1,29 +1,21 @@
 import requests
+import os
+from auth0.v2.authentication import Oauth
+
 
 
 API_VERSION = 'v1'
 
 BASE_URL = 'http://api.ndustrial.io'
 
+AUTH0_URL = 'ndustrialio.auth0.com'
+
 
 class ApiClient(object):
 
-    def __init__(self, access_token, refresh_token=None, client_id=None, client_secret=None):
+    def __init__(self, access_token):
 
         self.access_token = access_token
-
-        if all((refresh_token, client_id, client_secret)):
-
-            self.auto_refresh=True
-
-            # Automatic token refresh enabled!
-            self.refresh_token = refresh_token
-            self.client_id = client_id
-            self.client_secret = client_secret
-
-        else:
-            self.auto_refresh=False
-
 
     def execute(self, api_request):
 
@@ -211,7 +203,7 @@ class DELETE(ApiRequest):
         return 'DELETE'
 
 
-class APIService(object):
+class ApiService(object):
 
     def __init__(self, client):
 
@@ -232,23 +224,52 @@ class APIService(object):
         else:
             return api_request.base_url(self.baseURL())
 
+
+class Service(ApiService):
+    def __init(self, client):
+
+        super(Service, self).__init__(client)
+
+class LegacyService(ApiService):
+
+    def __init__(self, client):
+
+        super(LegacyService, self).__init__(client)
+
+
 class ServiceInitializer(object):
 
-    def __init__(self, access_token, refresh_token = None, client_id = None, client_secret = None):
+    @staticmethod
+    def init_service(service_class, client_id=None):
 
-        self.client = ApiClient(access_token=access_token,
-                                refresh_token=refresh_token,
-                                client_id=client_id,
-                                client_secret=client_secret)
+        assert ((service_class.__base__ == Service) or (service_class.__base__ == LegacyService))
+
+        if (service_class.__base__ == Service):
+
+            # modern auth0 service
+
+            # need a client ID to do this
+            assert client_id != None
+
+            # need to login to get JWT token
+            oauth = Oauth(AUTH0_URL)
+
+            token = oauth.login(client_id=client_id,
+                                client_secret=os.environ.get('CLIENT_SECRET'),
+                                audience=service_class.clientID,
+                                grant_type='client_credentials')
+
+            return service_class(ApiClient(access_token=token['access_token']))
+
+        else:
+            # legacy service.. grab access token from environment
+            return service_class(ApiClient(access_token=os.environ.get('ACCESS_TOKEN')))
 
 
 
-    def init_service(self, service_class):
-
-        return service_class(self.client)
 
 
-class BatchService(APIService):
+class BatchService(LegacyService):
 
     def __init__(self, client):
 

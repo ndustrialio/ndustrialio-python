@@ -1,6 +1,6 @@
 from apiservices import *
 
-class WorkerService(APIService):
+class WorkerService(LegacyService):
 
     def __init__(self, client):
 

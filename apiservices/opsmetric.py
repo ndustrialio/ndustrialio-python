@@ -1,7 +1,7 @@
 from apiservices import *
 
 
-class OpsmetricService(APIService):
+class OpsmetricService(LegacyService):
 
 
     def __init__(self, client):

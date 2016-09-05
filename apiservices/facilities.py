@@ -2,7 +2,7 @@ from apiservices import *
 from datetime import datetime
 
 
-class FacilityService(APIService):
+class FacilityService(LegacyService):
 
     def __init__(self, client):
 
