@@ -256,7 +256,7 @@ class ServiceInitializer(object):
 
             token = oauth.login(client_id=client_id,
                                 client_secret=os.environ.get('CLIENT_SECRET'),
-                                audience=service_class.clientID,
+                                audience=service_class.audience(),
                                 grant_type='client_credentials')
 
             return service_class(ApiClient(access_token=token['access_token']))
