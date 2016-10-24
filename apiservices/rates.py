@@ -2,9 +2,9 @@ from apiservices import *
 
 class RatesService(Service):
 
-    def __init__(self, client):
+    def __init__(self, client_id, client_secret=None):
 
-        super(RatesService, self).__init__(client)
+        super(RatesService, self).__init__(client_id, client_secret)
 
     def baseURL(self):
 

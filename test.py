@@ -5,9 +5,9 @@ from apiservices.rates import RatesService
 
 
 
-worker_service = ServiceInitializer.init_service(WorkerService)
+worker_service = WorkerService()
 
-rates_service = ServiceInitializer.init_service(RatesService, client_id='Y7OOKIEDvsb7t1UiF9BMGg3R1WdYgNFi')
+rates_service = RatesService(client_id='Y7OOKIEDvsb7t1UiF9BMGg3R1WdYgNFi')
 
 schedules = rates_service.getSchedules()
 

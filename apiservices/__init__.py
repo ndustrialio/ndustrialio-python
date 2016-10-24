@@ -205,9 +205,9 @@ class DELETE(ApiRequest):
 
 class ApiService(object):
 
-    def __init__(self, client):
+    def __init__(self):
 
-        self.client = client
+        self.client=None
 
     def baseURL(self):
 
@@ -226,48 +226,42 @@ class ApiService(object):
 
 
 class Service(ApiService):
-    def __init(self, client):
 
-        super(Service, self).__init__(client)
+    def __init__(self, client_id, client_secret = None):
+
+        super(Service, self).__init__()
+
+        # need to login to get JWT token
+        oauth = Oauth(AUTH0_URL)
+
+        if client_secret is None:
+            client_secret = os.environ.get('CLIENT_SECRET')
+
+        assert client_secret is not None
+
+        token = oauth.login(client_id=client_id,
+                            client_secret= client_secret,
+                            audience=self.audience(),
+                            grant_type='client_credentials')
+
+        self.client = ApiClient(access_token=token['access_token'])
+
+    def audience(self):
+
+        return 'base_audience'
 
 class LegacyService(ApiService):
 
-    def __init__(self, client):
+    def __init__(self, access_token = None):
 
-        super(LegacyService, self).__init__(client)
+        super(LegacyService, self).__init__()
 
+        if access_token is None:
+            access_token = os.environ.get('ACCESS_TOKEN')
 
-class ServiceInitializer(object):
+        assert access_token is not None
 
-    @staticmethod
-    def init_service(service_class, client_id=None):
-
-        assert ((service_class.__base__ == Service) or (service_class.__base__ == LegacyService))
-
-        if (service_class.__base__ == Service):
-
-            # modern auth0 service
-
-            # need a client ID to do this
-            assert client_id != None
-
-            # need to login to get JWT token
-            oauth = Oauth(AUTH0_URL)
-
-            token = oauth.login(client_id=client_id,
-                                client_secret=os.environ.get('CLIENT_SECRET'),
-                                audience=service_class.audience(),
-                                grant_type='client_credentials')
-
-            return service_class(ApiClient(access_token=token['access_token']))
-
-        else:
-            # legacy service.. grab access token from environment
-            return service_class(ApiClient(access_token=os.environ.get('ACCESS_TOKEN')))
-
-
-
-
+        self.client = ApiClient(access_token=access_token)
 
 class BatchService(LegacyService):
 
