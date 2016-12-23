@@ -18,11 +18,11 @@ class RatesService(Service):
 
         return self.execute(GET(uri='schedules'), execute)
 
-    def getSchedulePeriods(self, id, execute=True):
+    def getScheduleRTPPeriods(self, id, execute=True):
         
-        return self.execute(GET(uri='schedules/{}/periods'.format(id)), execute)
+        return self.execute(GET(uri='schedules/{}/rtp/periods'.format(id)), execute)
     
-    def getPeriod(self, id, execute=True):
+    def getRTPPeriod(self, id, execute=True):
         
-        return self.execute(GET(uri='periods/{}'.format(id)), execute)
+        return self.execute(GET(uri='rtp/periods/{}'.format(id)), execute)
 
