@@ -18,9 +18,16 @@ class RatesService(Service):
 
         return self.execute(GET(uri='schedules'), execute)
 
-    def getScheduleRTPPeriods(self, id, execute=True):
+    def getScheduleRTPPeriods(self, id, orderBy=None, reverseOrder=False, execute=True):
         
-        return self.execute(GET(uri='schedules/{}/rtp/periods'.format(id)), execute)
+        params = {}
+        if  orderBy:
+            assert isinstance(orderBy, str)
+            params['orderBy'] = orderBy
+        assert isinstance(reverseOrder, bool)
+        params['reverseOrder'] = reverseOrder
+        
+        return self.execute(GET(uri='schedules/{}/rtp/periods'.format(id)).params(params), execute)
     
     def getRTPPeriod(self, id, execute=True):
         

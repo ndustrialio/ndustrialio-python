@@ -149,7 +149,7 @@ class ApiRequest(object):
 
             param_list = []
 
-            for p, v in self.http_params.iteritems():
+            for p, v in self.http_params.items():
                 param_list.append(p+'='+str(v))
 
             param_string += '&'.join(param_list)
