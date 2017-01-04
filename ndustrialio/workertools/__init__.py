@@ -9,7 +9,7 @@ class BaseWorker(object):
         self.env = environment
         self.uuid = workerID
         self.initializer = ServiceInitializer(access_token=os.environ.get('ACCESS_TOKEN'))
-        self.workerService = WorkerService(acc)
+        self.workerService = WorkerService()
         self.configuration_id = None
 
         # load configuration
