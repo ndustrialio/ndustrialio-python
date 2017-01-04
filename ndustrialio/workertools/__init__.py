@@ -5,8 +5,14 @@ from ndustrialio.apiservices.contxt import ContxtService
 
 
 class BaseWorker(object):
-    def __init__(self, client_id, environment, client_secret=None):
+    def __init__(self, environment, client_id=None, client_secret=None):
         self.env = environment
+
+        if client_id is None:
+            client_id = os.environ.get("CLIENT_ID")
+
+        assert client_id is not None
+
         self.client_id = client_id
         self.contxt = ContxtService(client_id, client_secret)
         self.configuration_id = None
@@ -55,21 +61,17 @@ class BaseWorker(object):
 
         return config
 
-    def updateConfigurationValue(self, key, value):
+    def updateConfigurationValue(self, key, value, value_type=None, is_hidden=False):
+
+        new_val = {'value': value, 'is_hidden':is_hidden}
+
+        if value_type:
+            new_val['value_type'] = value_type
 
         # update local value
-        configValue = self.config[key]
+        self.config[key] = new_val
 
-        configValue['value'] = value
-
-        # send along type so update completes properly
-        value_type = configValue['type']
-
-        value_id = configValue['id']
-
-        self.workerService.updateConfigurationValue(self.configuration_id,
-                                                    value_id, key=None, value=value,
-                                                    value_type=value_type)
+        self.contxt.putConfigurationValue(self.configuration_id, {key:new_val})
 
     def getConfigurationValue(self, key):
 
@@ -79,18 +81,9 @@ class BaseWorker(object):
         except KeyError:
             return None
 
-    def createConfigurationValue(self, key, value, value_type):
+    def deleteConfigurationValue(self, key):
 
-        res = self.workerService.createConfigurationValue(self.configuration_id, key, value, value_type)
-
-        # load local values
-        configValue = {'value': value, 'id': res.id, 'type': value_type}
-
-        self.config[key] = configValue
-
-    def deleteConfigurationValue(self, key, value):
-
-        self.workerService.deleteConfigurationValue(self.configuration_id, value['id'])
+        self.contxt.deleteConfigurationValue(self.configuration_id, key)
 
         # TODO: API provides no way of checking if deletion was successful
         del self.config[key]

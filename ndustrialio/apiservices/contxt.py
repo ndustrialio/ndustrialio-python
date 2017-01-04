@@ -17,6 +17,15 @@ class ContxtService(Service):
         return self.execute(
             GET(uri='clients/{}/configurations?environment_id={}'.format(self.client_id, environment_id)), execute)
 
+    def putConfigurationValue(self, configuration_id, values, execute=True):
+        return self.execute(POST(uri='configurations/{}/values'.format(configuration_id))
+                            .body(body=values),
+                            execute=execute)
+
+    def deleteConfigurationValue(self, configuration_id, key, execute=True):
+        return self.execute(DELETE(uri='configurations/{}/values/{}'.format(configuration_id, key)),
+                            execute=execute)
+
     def startWorkerRun(self, execute=True):
         return self.execute(POST(uri='clients/{}/runs'.format(self.client_id))
                             .body(body={'start_time': str(datetime.now())}),
