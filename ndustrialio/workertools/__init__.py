@@ -1,24 +1,30 @@
 import json
 import os
 
-from ndustrialio.apiservices.workers import WorkerService
+from ndustrialio.apiservices.contxt import ContxtService
 
 
 class BaseWorker(object):
-    def __init__(self, workerID, environment):
+    def __init__(self, client_id, environment, client_secret=None):
         self.env = environment
-        self.uuid = workerID
-        self.initializer = ServiceInitializer(access_token=os.environ.get('ACCESS_TOKEN'))
-        self.workerService = WorkerService()
+        self.client_id = client_id
+        self.contxt = ContxtService(client_id, client_secret)
         self.configuration_id = None
+        self.run_id = None
 
         # load configuration
         self.config = self.loadConfiguration()
 
+    def startWorker(self):
+        self.run_id = self.contxt.startWorkerRun()
+        self.doWork()
+        self.contxt.endWorkerRun(self.run_id)
+
+    def addMetric(self, key, value):
+        self.contxt.addWorkerRunMetric(self.run_id, key, value)
+
     def loadConfiguration(self):
-        self.worker = self.workerService.get(uuid=self.uuid)
-        print (self.worker['label'])
-        configValues = self.workerService.getConfigurationValues(id=self.uuid, environment=self.env)
+        configValues = self.contxt.getConfigurationByClient(self.env)
         config = {}
 
         for value in configValues:
