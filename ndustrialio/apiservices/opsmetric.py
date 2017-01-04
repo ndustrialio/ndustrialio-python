@@ -1,12 +1,12 @@
-from apiservices import *
+from ndustrialio.apiservices import *
 
 
 class OpsmetricService(LegacyService):
 
 
-    def __init__(self, client):
+    def __init__(self, access_token=None):
 
-        super(OpsmetricService, self).__init__(client)
+        super(OpsmetricService, self).__init__(access_token=access_token)
 
     def baseURL(self):
         return 'http://opsmetric-translations.api.ndustrial.io'

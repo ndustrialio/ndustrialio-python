@@ -1,4 +1,4 @@
-from apiservices import *
+from ndustrialio.apiservices import *
 
 class RatesService(Service):
 

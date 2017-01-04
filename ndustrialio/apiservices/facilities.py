@@ -1,12 +1,13 @@
-from apiservices import *
 from datetime import datetime
+
+from ndustrialio.apiservices import *
 
 
 class FacilityService(LegacyService):
 
-    def __init__(self, client):
+    def __init__(self, access_token=None):
 
-        super(FacilityService, self).__init__(client)
+        super(FacilityService, self).__init__(access_token=access_token)
 
     def get(self, id=None, execute=True):
 

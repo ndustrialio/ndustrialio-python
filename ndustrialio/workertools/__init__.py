@@ -1,7 +1,7 @@
-from apiservices import ServiceInitializer
-from apiservices.workers import WorkerService
-import os
 import json
+import os
+
+from ndustrialio.apiservices.workers import WorkerService
 
 
 class BaseWorker(object):
@@ -9,7 +9,7 @@ class BaseWorker(object):
         self.env = environment
         self.uuid = workerID
         self.initializer = ServiceInitializer(access_token=os.environ.get('ACCESS_TOKEN'))
-        self.workerService = self.initializer.init_service(WorkerService)
+        self.workerService = WorkerService(acc)
         self.configuration_id = None
 
         # load configuration

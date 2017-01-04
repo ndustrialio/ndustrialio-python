@@ -265,9 +265,9 @@ class LegacyService(ApiService):
 
 class BatchService(LegacyService):
 
-    def __init__(self, client):
+    def __init__(self, access_token=None):
 
-        super(BatchService, self).__init__(client)
+        super(BatchService, self).__init__(access_token=access_token)
 
 
     def batchRequest(self, requests):

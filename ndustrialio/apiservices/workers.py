@@ -1,10 +1,10 @@
-from apiservices import *
+from ndustrialio.apiservices import *
 
 class WorkerService(LegacyService):
 
-    def __init__(self, client):
+    def __init__(self, access_token=None):
 
-        super(WorkerService, self).__init__(client)
+        super(WorkerService, self).__init__(access_token=access_token)
 
     def get(self, id=None, execute=True):
 

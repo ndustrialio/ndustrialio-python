@@ -1,9 +1,6 @@
-from apiservices import *
 from apiservices.workers import WorkerService
-from apiservices.rates import RatesService
 
-
-
+from ndustrialio.apiservices.rates import RatesService
 
 worker_service = WorkerService()
 

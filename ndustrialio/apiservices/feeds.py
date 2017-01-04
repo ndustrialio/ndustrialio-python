@@ -1,5 +1,7 @@
-from apiservices import *
 from datetime import datetime
+
+from ndustrialio.apiservices import *
+
 
 class FeedsService(Service):
 
