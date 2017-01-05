@@ -5,7 +5,7 @@ ndustrial.io Python API bindings and tools
 In order to successfully authenticate to an API, the CLIENT_ID and CLIENT_SECRET (given by Contxt) must be available in the environment
 
 ## Prerequisites
-`pip install https://github.com/ndustrialio/auth0-python.git`
+`pip install git+https://github.com/ndustrialio/auth0-python.git`
 
 ## Example
 
