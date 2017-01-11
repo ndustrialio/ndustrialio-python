@@ -33,7 +33,7 @@ class BaseWorker(object):
         configValues = self.contxt.getConfigurationByClient(self.env)
         config = {}
 
-        for value in configValues:
+        for value in configValues['ConfigurationValues']:
 
             configValue = {}
 
@@ -43,7 +43,7 @@ class BaseWorker(object):
             # store value
             if configValue['type'] == "integer":
                 configValue['value'] = int(value['value'])
-            elif value.type == "json":
+            elif configValue['type'] == "json":
                 configValue['value'] = json.loads(value['value'])
             else:
                 configValue['value'] = str(value['value'])
@@ -54,10 +54,7 @@ class BaseWorker(object):
             # store config dict
             config[value['key']] = configValue
 
-            # save configuration_id
-            # should be the same each time
-            # dumb, but whatever
-            self.configuration_id = value.configuration_id
+            self.configuration_id = value['configuration_id']
 
         return config
 
