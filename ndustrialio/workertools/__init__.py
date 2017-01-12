@@ -22,7 +22,10 @@ class BaseWorker(object):
         self.config = self.loadConfiguration()
 
     def startWorker(self):
-        self.run_id = self.contxt.startWorkerRun()
+
+        run = self.contxt.startWorkerRun()
+        print 'Worker run ID: '+ run['id']
+        self.run_id = run['id']
         self.doWork()
         self.contxt.endWorkerRun(self.run_id)
 

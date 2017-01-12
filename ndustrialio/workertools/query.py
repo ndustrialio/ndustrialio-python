@@ -109,25 +109,10 @@ class Query(object):
 
             # Create condition strings
             conditions = [join_from + '.' + c[0] + ' = ' + join_table + '.' + c[1] for c in join_conditions]
-
             self._joins.append('LEFT JOIN ' + join_table + ' ON ' + ' AND '.join(conditions))
 
             return self
 
-    def left_join(self, join_from=None, join_table=None, join_conditions=None):
-        
-        if join_table is None and join_conditions is None:
-            return self._joins
-
-        else:
-            if join_from is None:
-                join_from = self._from
-
-            # Create condition strings
-            conditions = [join_from + '.' + c[0] + ' = ' + join_table + '.' + c[1] for c in join_conditions]
-            self._joins.append('LEFT JOIN ' + join_table + ' ON ' + ' AND '.join(conditions))
-
-            return self
     
     def limit(self, limit=None):
 
