@@ -6,7 +6,7 @@ from ndustrialio.apiservices import *
 class FeedsService(Service):
 
 
-    def __init__(self, client_id, client_secret):
+    def __init__(self, client_id, client_secret=None):
         super(FeedsService, self).__init__(client_id, client_secret)
 
 
@@ -95,7 +95,16 @@ class FeedsService(Service):
                                 .format(output_id, field_human_name))
                                 .params(params), execute=execute)
 
-    def getOutputs(self, id=None, execute=True):
+    def getOutputsForFacility(self, facility_id=None, limit=100, offset=0, execute=True):
+        assert isinstance(facility_id, int)
+
+        params = {'facility_id': facility_id,
+                    'limit': limit,
+                  'offset': offset}
+
+        return self.execute(GET(uri='outputs').params(params), execute=execute)
+
+    def getOutputs(self, id=None, limit=100, offset=0, execute=True):
 
         if id is None:
             uri='outputs'
@@ -103,8 +112,10 @@ class FeedsService(Service):
             assert isinstance(id, int)
             uri='outputs/'+str(id)
 
+        params = {'limit': limit,
+                  'offset': offset}
 
-        return self.execute(GET(uri=uri), execute=execute)
+        return self.execute(GET(uri=uri).params(params), execute=execute)
 
 
     def getFields(self, output_id, execute=True):
