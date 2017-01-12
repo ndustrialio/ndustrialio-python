@@ -113,3 +113,20 @@ class FeedsService(Service):
 
         return self.execute(GET('outputs/' + str(output_id) + '/fields'), execute=execute)
 
+    def getTypes(self, execute=True):
+
+        return self.execute(GET('feeds/types'), execute=execute)
+
+    def updateStatus(self, feed_id, status, execute=True):
+        assert isinstance(feed_id, int)
+        # Check type of status
+
+        params = {'status': str(status)}
+
+        return self.execute(POST('feeds/{}/status'
+                            .format(feed_id))
+                            .params(params), execute=execute)
+
+    def getLatestStatus(self, execute=True):
+
+        return self.execute(GET('feeds/status/latest'), execute=execute)
