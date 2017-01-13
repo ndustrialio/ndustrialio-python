@@ -77,14 +77,15 @@ class FeedsService(Service):
                                 .format(feed_id, field_descriptor))
                                 .params(params), execute=execute)
 
-    def getData(self, output_id, field_human_name, window, time_start, time_end=None, execute=True):
+    def getData(self, output_id, field_human_name, window, time_start, time_end=None, limit=100, execute=True):
         assert isinstance(output_id, int)
         assert isinstance(field_human_name, basestring)
         assert isinstance(time_start, datetime)
-        assert window in [60, 900, 3600]
+        assert window in [0, 60, 900, 3600]
 
         params = {'timeStart': time_start.strftime('%s'),
-                    'window': str(window)}
+                    'window': str(window),
+                    'limit': limit}
 
         if time_end:
             assert isinstance(time_end, datetime)

@@ -89,10 +89,27 @@ class Query(object):
                 if join_from is None:
                     join_from = self._from
 
-                # Create condition strings
-                conditions = [join_from + '.' + c[0] + ' = ' + join_table + '.' + c[1] for c in join_conditions]
+                processed_conditions = []
 
-                self._joins.append('JOIN ' + join_table + ' ON ' + ' AND '.join(conditions))
+                # Create condition strings
+                for condition in join_conditions:
+
+                    left_cond = condition[0]
+                    right_cond = condition[1]
+
+                    if isinstance(left_cond, Cast):
+                        left_cond = str(left_cond.table(join_from))
+                    else:
+                        left_cond = join_from + '.' + left_cond
+
+                    if isinstance(right_cond, Cast):
+                        right_cond = str(right_cond.table(join_table))
+                    else:
+                        right_cond = join_table + '.' + right_cond
+
+                    processed_conditions.append(left_cond + ' = ' + right_cond)
+
+                self._joins.append('JOIN ' + join_table + ' ON ' + ' AND '.join(processed_conditions))
 
                 return self
 
@@ -107,9 +124,27 @@ class Query(object):
             if join_from is None:
                 join_from = self._from
 
+            processed_conditions = []
+
             # Create condition strings
-            conditions = [join_from + '.' + c[0] + ' = ' + join_table + '.' + c[1] for c in join_conditions]
-            self._joins.append('LEFT JOIN ' + join_table + ' ON ' + ' AND '.join(conditions))
+            for condition in join_conditions:
+
+                left_cond = condition[0]
+                right_cond = condition[1]
+
+                if isinstance(left_cond, Cast):
+                    left_cond = str(left_cond.table(join_from))
+                else:
+                    left_cond = join_from + '.' + left_cond
+
+                if isinstance(right_cond, Cast):
+                    right_cond = str(right_cond.table(join_table))
+                else:
+                    right_cond = join_table + '.' + right_cond
+
+                processed_conditions.append(left_cond + ' = ' + right_cond)
+
+            self._joins.append('LEFT JOIN ' + join_table + ' ON ' + ' AND '.join(processed_conditions))
 
             return self
 
@@ -340,40 +375,29 @@ class Where(object):
         return self.where
 
 
-def _test_query():
-    q = Select('hj_t_location') \
-        .fields('field1') \
-        .fields('field2') \
-        .where('field2 > 3') \
-        .where('field1 = 6') \
-        .join('hj_t_transaction', [('field1', 'field1'), ('field2', 'field2')]) \
-        .order('field1', True) \
-        .limit(500)
-    count = Count(query=q)
-    query_str = str(q)
-    count_str = str(count)
-    print query_str
+class Cast(object):
+    def __init__(self, column, cast_type):
+        self._column = column
+        self._cast_type = cast_type
+        self._table = None
 
+    def table(self, table):
+        self._table = table
+        return self
 
-def _test_where():
+    def __str__(self):
 
-    where = Where('f1>f2').AND('f2=2').OR('f2=5')
-
-    print(Select("foo").
-          fields('bar').
-          fields('baz').
-          where(where).
-          limit(1000))
-
-
-def _test_group_by():
-    print(Select("foo").fields(['f1', 'COUNT(*)']).group_by('f1'))
-
-
-if __name__ == '__main__':
-    _test_query()
-    print("\n" + "="*50 + "\n")
-    _test_where()
-    print("\n" + "="*50 + "\n")
-    _test_group_by()
+        if self._table:
+            return 'CAST('\
+                +self._table\
+                +'.'+self._column\
+                +' AS '\
+                + self._cast_type\
+                +')'
+        else:
+            return 'CAST('\
+                +self._column\
+                +' AS '\
+                + self._cast_type\
+                +')'
 
