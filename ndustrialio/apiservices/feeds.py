@@ -2,7 +2,6 @@ from datetime import datetime
 
 from ndustrialio.apiservices import *
 
-
 class FeedsService(Service):
 
 
@@ -28,6 +27,17 @@ class FeedsService(Service):
 
 
         return self.execute(GET(uri=uri), execute=execute)
+
+    def getRecordByKey(self, key, execute=True):
+
+        params = {"key": key}
+
+        feed = self.execute(GET(uri='feeds').params(params), execute=execute)
+
+        if feed.records:
+            return feed.records[0]
+
+        return None
 
     def getFieldDescriptors(self, feed_id, limit=100, offset=0, execute=True):
 
