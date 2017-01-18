@@ -34,8 +34,8 @@ class FeedsService(Service):
 
         feed = self.execute(GET(uri='feeds').params(params), execute=execute)
 
-        if feed.records:
-            return feed.records[0]
+        if feed['records']:
+            return feed['records'][0]
 
         return None
 
