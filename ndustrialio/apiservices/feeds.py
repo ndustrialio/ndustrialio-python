@@ -26,8 +26,21 @@ class FeedsService(Service):
             assert isinstance(id, int)
             uri='feeds/'+str(id)
 
-
         return self.execute(GET(uri=uri), execute=execute)
+
+
+    def getFeedByKey(self, key, execute=True):
+
+        params = {"key": key}
+
+        return self.execute(GET(uri='feeds').params(params), execute=execute)
+
+
+    def createFeed(self, feed_data, execute=True):
+
+        return self.execute(POST(uri='feeds').body(feed_data)
+                            .content_type(ApiRequest.URLENCODED_CONTENT_TYPE), execute = execute)
+
 
     def getFieldDescriptors(self, feed_id, limit=100, offset=0, execute=True):
 

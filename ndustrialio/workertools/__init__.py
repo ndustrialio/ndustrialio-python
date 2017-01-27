@@ -66,7 +66,7 @@ class BaseWorker(object):
         new_val = {'value': value, 'is_hidden':is_hidden}
 
         if value_type:
-            new_val['value_type'] = value_type
+            new_val['type'] = value_type
 
         # update local value
         self.config[key] = new_val
