@@ -2,7 +2,6 @@ from datetime import datetime
 
 from ndustrialio.apiservices import *
 
-
 class FeedsService(Service):
 
 
@@ -27,7 +26,6 @@ class FeedsService(Service):
             uri='feeds/'+str(id)
 
         return self.execute(GET(uri=uri), execute=execute)
-
 
     def getFeedByKey(self, key, execute=True):
 

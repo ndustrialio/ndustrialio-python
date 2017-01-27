@@ -263,6 +263,9 @@ class LegacyService(ApiService):
 
         self.client = ApiClient(access_token=access_token)
 
+    def baseURL(self):
+        return BASE_URL
+
 class BatchService(LegacyService):
 
     def __init__(self, access_token=None):
