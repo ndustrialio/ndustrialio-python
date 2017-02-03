@@ -22,7 +22,7 @@ class FeedsService(Service):
         if id is None:
             uri='feeds'
         else:
-            assert isinstance(id, int)
+            # assert isinstance(id, int)
             uri='feeds/'+str(id)
 
         return self.execute(GET(uri=uri), execute=execute)
@@ -31,20 +31,56 @@ class FeedsService(Service):
 
         params = {"key": key}
 
-        return self.execute(GET(uri='feeds').params(params), execute=execute)
+        return PagedResponse(self.execute(GET(uri='feeds').params(params), execute=execute))
 
 
-    def createFeed(self, feed_data, execute=True):
+    def createFeed(self, key, timezone, type, facility_id, execute=True):
+
+        feed_data = {'key': key,
+                     'timezone': timezone,
+                     'feed_type': type,
+                     'facility_id': facility_id,
+                     'routing_keys': '["development.'+type+'.'+key+'"]'}
 
         return self.execute(POST(uri='feeds').body(feed_data)
                             .content_type(ApiRequest.URLENCODED_CONTENT_TYPE), execute = execute)
 
 
+
+
+    def createOutput(self, feed_id, facility_id, label, type, key=None, execute=True):
+
+        output_data = {'feed_id': feed_id,
+                       'facility_id': facility_id,
+                       'label': label,
+                       'output_type': type}
+        if key:
+            output_data['key']=key
+
+        return self.execute(POST(uri='outputs').body(output_data)
+                            .content_type(ApiRequest.URLENCODED_CONTENT_TYPE), execute = execute)
+
+    def createField(self, feed_key, output_id, human_name, field_descriptor, label=None, type=None, execute=True):
+
+        field_data = {'feed_key': feed_key,
+                'output_id': output_id,
+                'field_human_name': human_name,
+                'field_descriptor': field_descriptor}
+
+        if type:
+            field_data['value_type'] = type
+        if label:
+            field_data['label'] = label
+
+        return self.execute(POST(uri='outputs/{}/fields'.format(output_id)).body(field_data)
+                            .content_type(ApiRequest.URLENCODED_CONTENT_TYPE), execute = execute)
+
+
     def getFieldDescriptors(self, feed_id, limit=100, offset=0, execute=True):
 
-        assert isinstance(feed_id, int)
-        assert isinstance(limit, int)
-        assert isinstance(offset, int)
+        # assert isinstance(feed_id, int)
+        # assert isinstance(limit, int)
+        # assert isinstance(offset, int)
 
         params = {'limit': limit,
                   'offset': offset}
@@ -53,9 +89,9 @@ class FeedsService(Service):
 
     def getUnprovisionedFieldDescriptors(self, feed_id, limit=100, offset=0, execute=True):
 
-        assert isinstance(feed_id, int)
-        assert isinstance(limit, int)
-        assert isinstance(offset, int)
+        # assert isinstance(feed_id, int)
+        # assert isinstance(limit, int)
+        # assert isinstance(offset, int)
 
         params = {'limit': limit,
                   'offset': offset}
@@ -65,9 +101,10 @@ class FeedsService(Service):
 
 
     def getFeedOutputs(self, feed_id, limit=100, offset=0, execute=True):
-        assert isinstance(feed_id, int)
-        assert isinstance(limit, int)
-        assert isinstance(offset, int)
+
+        # assert isinstance(feed_id, int)
+        # assert isinstance(limit, int)
+        # assert isinstance(offset, int)
 
         params = {'limit': limit,
                   'offset': offset}
@@ -75,8 +112,9 @@ class FeedsService(Service):
         return self.execute((GET('feeds/{}/outputs'.format(feed_id)).params(params)), execute=execute)
 
     def getUnprovisionedData(self, feed_id, field_descriptor, time_start, time_end=None, execute=True):
-        assert isinstance(feed_id, int)
-        assert isinstance(field_descriptor, str)
+
+        # assert isinstance(feed_id, int)
+        # assert isinstance(field_descriptor, str)
 
         params = {'time_start':time_start.strftime('%s')}
 
@@ -89,10 +127,11 @@ class FeedsService(Service):
                                 .params(params), execute=execute)
 
     def getData(self, output_id, field_human_name, window, time_start, time_end=None, limit=100, execute=True):
-        assert isinstance(output_id, int)
-        assert isinstance(field_human_name, basestring)
-        assert isinstance(time_start, datetime)
-        assert window in [0, 60, 900, 3600]
+
+        # assert isinstance(output_id, int)
+        # assert isinstance(field_human_name, basestring)
+        # assert isinstance(time_start, datetime)
+        # assert window in [0, 60, 900, 3600]
 
         params = {'timeStart': time_start.strftime('%s'),
                     'window': str(window),
@@ -108,7 +147,8 @@ class FeedsService(Service):
                                 .params(params), execute=execute)
 
     def getOutputsForFacility(self, facility_id=None, limit=100, offset=0, execute=True):
-        assert isinstance(facility_id, int)
+
+        # assert isinstance(facility_id, int)
 
         params = {'facility_id': facility_id,
                     'limit': limit,
@@ -121,7 +161,7 @@ class FeedsService(Service):
         if id is None:
             uri='outputs'
         else:
-            assert isinstance(id, int)
+            # assert isinstance(id, int)
             uri='outputs/'+str(id)
 
         params = {'limit': limit,
@@ -132,7 +172,7 @@ class FeedsService(Service):
 
     def getFields(self, output_id, execute=True):
 
-        assert isinstance(output_id, int)
+        # assert isinstance(output_id, int)
 
         return self.execute(GET('outputs/' + str(output_id) + '/fields'), execute=execute)
 
@@ -141,7 +181,8 @@ class FeedsService(Service):
         return self.execute(GET('feeds/types'), execute=execute)
 
     def updateStatus(self, feed_id, status, execute=True):
-        assert isinstance(feed_id, int)
+
+        # assert isinstance(feed_id, int)
         # Check type of status
 
         params = {'status': str(status)}

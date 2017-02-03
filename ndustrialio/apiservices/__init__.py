@@ -1,7 +1,7 @@
 import requests
 import os
 from auth0.v2.authentication import Oauth
-
+import json
 
 
 API_VERSION = 'v1'
@@ -42,13 +42,46 @@ class ApiClient(object):
     def process_response(self, response):
 
         # throw an exception in case of a status problem
-        response.raise_for_status()
+        #response.raise_for_status()
+
+        # lifted the following code from requests/models.py and modified it
+        http_error_msg = ''
+
+        if 400 <= response.status_code < 500:
+            msg = json.loads(response.text)['message']
+            http_error_msg = '%s Client Error: %s - %s' % (response.status_code, response.reason, msg)
+
+        elif 500 <= response.status_code < 600:
+            msg = json.loads(response.text)['message']
+            http_error_msg = '%s Server Error: %s - %s' % (response.status_code, response.reason, msg)
+
+        if http_error_msg:
+            raise requests.exceptions.HTTPError(http_error_msg, response=self)
 
         # decode json response if there is a response
         if response.status_code != 204:
             return response.json()
         else:
             return None
+
+
+class PagedResponse(object):
+
+    def __init__(self, data):
+
+        self.total_records = data['_metadata']['totalRecords']
+        self.offset = data['_metadata']['offset']
+
+        self.records = data['records']
+
+    def first(self):
+
+        return self.records[0]
+
+    def __iter__(self):
+        for record in self.records:
+            yield record
+
 
 
 class ApiRequest(object):
