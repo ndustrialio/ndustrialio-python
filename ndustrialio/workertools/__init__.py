@@ -1,11 +1,34 @@
 import json
 import os
+from cassandra_utility import CassandraUtility
+from postgres_utility import PostgresUtility
+from query import *
 
 from ndustrialio.apiservices.contxt import ContxtService
 
 
-class BaseWorker(object):
+class ConfiguredComponent(object):
+    def __init__(self):
+
+        self.config = self.loadConfiguration()
+
+    def loadConfiguration(self):
+        raise NotImplementedError('Cannot directly instantiate ConfiguredComponent')
+
+    def getConfigurationValue(self, key):
+
+        try:
+            return self.config[key]['value']
+
+        except KeyError:
+            return None
+
+
+class BaseWorker(ConfiguredComponent):
     def __init__(self, environment, client_id=None, client_secret=None):
+
+        super(BaseWorker, self).__init__()
+
         self.env = environment
 
         if client_id is None:
@@ -18,9 +41,6 @@ class BaseWorker(object):
         self.configuration_id = None
         self.run_id = None
 
-        # load configuration
-        self.config = self.loadConfiguration()
-
     def startWorker(self):
 
         run = self.contxt.startWorkerRun()
@@ -28,6 +48,9 @@ class BaseWorker(object):
         self.run_id = run['id']
         self.doWork()
         self.contxt.endWorkerRun(self.run_id)
+
+    def doWork(self):
+        raise NotImplementedError('Must subclass BaseWorker and define doWork')
 
     def addMetric(self, key, value):
         self.contxt.addWorkerRunMetric(self.run_id, key, value)
@@ -73,13 +96,6 @@ class BaseWorker(object):
 
         self.contxt.putConfigurationValue(self.configuration_id, {key:new_val})
 
-    def getConfigurationValue(self, key):
-
-        try:
-            return self.config[key]['value']
-
-        except KeyError:
-            return None
 
     def deleteConfigurationValue(self, key):
 
@@ -87,3 +103,40 @@ class BaseWorker(object):
 
         # TODO: API provides no way of checking if deletion was successful
         del self.config[key]
+
+
+
+class TestWorker(ConfiguredComponent):
+
+    def __init__(self):
+
+        super(TestWorker, self).__init__();
+
+    def loadConfiguration(self):
+
+        config = {}
+
+        with open('config.json') as config_data:
+
+            config_data = json.loads(config_data.read())
+
+            for config_key, config_value in config_data.iteritems():
+
+                if isinstance(config_value, dict):
+
+                    for k, v in config_value.iteritems():
+
+                        config['-'.join([config_key, k])] = {'value': v}
+
+                else:
+                    config[config_key] = config_value
+
+        return config
+
+
+
+
+
+
+
+
