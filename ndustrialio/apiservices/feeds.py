@@ -116,11 +116,11 @@ class FeedsService(Service):
         # assert isinstance(feed_id, int)
         # assert isinstance(field_descriptor, str)
 
-        params = {'time_start':time_start.strftime('%s')}
+        params = {'time_start': str((time_start - datetime(1970,1,1)).total_seconds())}
 
         if time_end:
             assert isinstance(time_end, datetime)
-            params['time_end'] = time_end.strftime('%s')
+            params['time_end'] = str((time_end - datetime(1970,1,1)).total_seconds())
 
         return self.execute(GET('feeds/{}/fields/{}/data'
                                 .format(feed_id, field_descriptor))
@@ -133,13 +133,12 @@ class FeedsService(Service):
         # assert isinstance(time_start, datetime)
         # assert window in [0, 60, 900, 3600]
 
-        params = {'timeStart': time_start.strftime('%s'),
+        params = {'timeStart': str((time_start - datetime(1970,1,1)).total_seconds()),
                     'window': str(window),
                     'limit': limit}
 
         if time_end:
-            assert isinstance(time_end, datetime)
-            params['timeEnd'] = time_end.strftime('%s')
+            params['timeEnd'] = str((time_end - datetime(1970,1,1)).total_seconds())
 
 
         return self.execute(GET('outputs/{}/fields/{}/data'
