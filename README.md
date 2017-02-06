@@ -55,4 +55,4 @@ variables, call `updateConfigurationValue`.
 
 ## Test worker
 You can instead subclass `TestWorker` to ease in worker development.  `TestWorker` looks for a file named `config.json`
-in its root folder.  Value access is the same as `BaseWorker`, but value updating is not supportd.
+in its root folder.  Value access is the same as `BaseWorker`, but value updating is not supported.
