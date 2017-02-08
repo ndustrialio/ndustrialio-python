@@ -2,7 +2,7 @@ import requests
 import os
 from auth0.v2.authentication import Oauth
 import json
-
+from datetime import datetime
 
 API_VERSION = 'v1'
 
@@ -82,7 +82,94 @@ class PagedResponse(object):
         for record in self.records:
             yield record
 
+class DataResponse(object):
 
+    def __init__(self, data, client):
+        self.client = client;
+        self.count = data['meta']['count']
+        self.has_more = data['meta']['has_more']
+
+        self.next_page_url = None
+        if self.has_more:
+            self.next_page_url = data['meta']['next_page_url']
+
+        self.records = data['records']
+
+    def __iter__(self):
+
+        while True:
+            for record in self.records:
+                record['event_time'] = datetime.strptime(record['event_time'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                yield record
+
+            if self.has_more:
+                #print 'Requesting more records..'
+                response = self.client.execute(StringRequest(self.next_page_url).method('GET'))
+
+                self.count = response['meta']['count']
+                self.has_more = response['meta']['has_more']
+
+                self.next_page_url = None
+                if self.has_more:
+                    self.next_page_url = response['meta']['next_page_url']
+
+                self.records = response['records']
+            else:
+                break
+
+
+
+
+class StringRequest(object):
+
+    URLENCODED_CONTENT_TYPE = 'application/x-www-form-urlencoded'
+    JSON_CONTENT_TYPE = 'application/json'
+
+    def __init__(self, request_string):
+        self.request_string = request_string
+
+        # authorize request, default true
+        self.authorize_request = True
+
+        self.http_content_type=self.JSON_CONTENT_TYPE
+
+        self.http_body = {}
+
+        self.http_method = None
+
+    def authorize(self, authorize=None):
+
+        if authorize is None:
+            return self.authorize_request
+        else:
+            self.authorize_request = authorize
+
+            return self
+
+    def body(self, body=None):
+        if body is None:
+            return self.http_body
+        else:
+            self.http_body = body
+            return self
+
+    def content_type(self, content_type=None):
+
+        if content_type is None:
+            return self.http_content_type
+        else:
+            self.http_content_type = content_type
+            return self
+
+    def method(self, method=None):
+        if method is None:
+            return self.http_method
+        else:
+            self.http_method = method
+            return self
+
+    def __str__(self):
+        return self.request_string
 
 class ApiRequest(object):
 

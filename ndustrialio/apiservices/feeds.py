@@ -141,9 +141,10 @@ class FeedsService(Service):
             params['timeEnd'] = str((time_end - datetime(1970,1,1)).total_seconds())
 
 
-        return self.execute(GET('outputs/{}/fields/{}/data'
+        return DataResponse(data=self.execute(GET('outputs/{}/fields/{}/data'
                                 .format(output_id, field_human_name))
-                                .params(params), execute=execute)
+                                .params(params), execute=execute),
+                            client=self.client)
 
     def getOutputsForFacility(self, facility_id=None, limit=100, offset=0, execute=True):
 
