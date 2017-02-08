@@ -1,4 +1,5 @@
 from ndustrialio.apiservices import *
+from datetime import datetime
 
 class RatesService(Service):
 
@@ -28,6 +29,44 @@ class RatesService(Service):
         params['reverseOrder'] = reverseOrder
         
         return self.execute(GET(uri='schedules/{}/rtp/periods'.format(id)).params(params), execute)
+    
+    '''
+        Get all usage periods for a range of time
+        
+        Params:
+        id (int) - the rate schedule id
+        timeStart (datetime) - start of the time range
+        timeEnd (datetime) - end of the time range
+    '''
+    def getUsagePeriods(self, id, timeStart, timeEnd, execute=True):
+        
+        params = {}
+        assert isinstance(id, int)
+        assert isinstance(timeStart, datetime)
+        assert isinstance(timeEnd, datetime)
+        params['timeEnd'] = timeEnd.strftime('%s')
+        params['timeStart'] = timeStart.strftime('%s')
+        
+        return self.execute(GET(uri='schedules/{}/usage/periods'.format(id)).params(params), execute)
+    
+    '''
+        Get all demand periods for a range of time
+        
+        Params:
+        id (int) - the rate schedule id
+        timeStart (datetime) - start of the time range
+        timeEnd (datetime) - end of the time range
+    '''
+    def getDemandPeriods(self, id, timeStart, timeEnd, execute=True):
+        
+        params = {}
+        assert isinstance(id, int)
+        assert isinstance(timeStart, datetime)
+        assert isinstance(timeEnd, datetime)
+        params['timeEnd'] = timeEnd.strftime('%s')
+        params['timeStart'] = timeStart.strftime('%s')
+        
+        return self.execute(GET(uri='schedules/{}/demand/periods'.format(id)).params(params), execute)
     
     def getRTPPeriod(self, id, execute=True):
         
