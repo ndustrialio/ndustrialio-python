@@ -8,7 +8,7 @@ from ndustrialio.apiservices.contxt import ContxtService
 class ConfiguredComponent(object):
     def __init__(self):
 
-        self.config = self.loadConfiguration()
+        self.config = None
 
     def loadConfiguration(self):
         raise NotImplementedError('Cannot directly instantiate ConfiguredComponent')
@@ -38,6 +38,7 @@ class BaseWorker(ConfiguredComponent):
         self.contxt = ContxtService(client_id, client_secret)
         self.configuration_id = None
         self.run_id = None
+        self.config = self.loadConfiguration()
 
     def startWorker(self):
 
@@ -108,7 +109,9 @@ class TestWorker(ConfiguredComponent):
 
     def __init__(self):
 
-        super(TestWorker, self).__init__();
+        super(TestWorker, self).__init__()
+
+        self.config = self.loadConfiguration()
 
     def loadConfiguration(self):
 
