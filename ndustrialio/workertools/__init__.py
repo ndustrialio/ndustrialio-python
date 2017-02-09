@@ -1,8 +1,6 @@
 import json
 import os
-from cassandra_utility import CassandraUtility
-from postgres_utility import PostgresUtility
-from query import *
+
 
 from ndustrialio.apiservices.contxt import ContxtService
 
