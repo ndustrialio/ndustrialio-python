@@ -10,6 +10,7 @@ class Query(object):
         self._limit = None
         self._args = None
         self._group_by = None
+        self._subqueries = []
 
     def table(self):
 
@@ -169,9 +170,27 @@ class Query(object):
 
             return self
 
+    def subquery(self, name, query):
+
+
+        if not self._subqueries:
+            # Do this differently for the first subquery
+            self._subqueries.append('WITH ' +
+                                    name +
+                                ' AS (' + str(query) +')')
+        else:
+            self._subqueries.append(name +
+                                   ' AS  (' +
+                                    str(query) + ')')
+
+        return self
+
     def __str__(self):
 
         query_chunks = []
+
+        # Do subqueries first
+        query_chunks.append(', '.join(self._subqueries))
 
         query_chunks.append(self._verb)
 
@@ -262,6 +281,10 @@ class Select(Query):
     def __str__(self):
 
         query_chunks = []
+
+        # Do subqueries first
+        query_chunks.append(', '.join(self._subqueries))
+
         query_chunks.append(self._verb)
         query_chunks.append(', '.join(self._fields))
         query_chunks.append('FROM ' + self._from)
@@ -321,6 +344,7 @@ class Count(Select):
             # copy wheres and joins, but not fields
             self._wheres = query._wheres
             self._joins = query.join()
+            self._subqueries = query._subqueries
 
         else:
             raise Exception('table_name or query must be provided!')
@@ -328,6 +352,10 @@ class Count(Select):
     def __str__(self):
 
         query_chunks = []
+
+        # Do subqueries first
+        query_chunks.append(', '.join(self._subqueries))
+
 
         query_chunks.append(self._verb)
 
