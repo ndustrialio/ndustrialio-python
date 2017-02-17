@@ -15,9 +15,10 @@ class FlywheelingService(Service):
         return 'GvjVT0O7PO1biyzABeqInlodVbN9TsCf'
 
     def getFacilities(self, execute=True):
-
         return self.execute(GET(uri='facilities'), execute)
     
+    def getSystem(self, system_id, execute=True):
+        return self.execute(GET(uri='systems/{}'.format(system_id)), execute)
     
     def getSystemsForFacility(self, facility_id, execute=True):
         return self.execute(GET(uri='facilities/{}/systems'.format(facility_id)), execute)
@@ -30,4 +31,3 @@ class FlywheelingService(Service):
         
     def addDataToRun(self, run_id, run_data):
         return self.execute(POST(uri='runs/{}/data'.format(run_id)).body(run_data))
-
