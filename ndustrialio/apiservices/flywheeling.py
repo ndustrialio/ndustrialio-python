@@ -31,3 +31,15 @@ class FlywheelingService(Service):
         
     def addDataToRun(self, run_id, run_data):
         return self.execute(POST(uri='runs/{}/data'.format(run_id)).body(run_data))
+    
+    def getFacilityAreas(self, facility_id, execute=True):
+        return self.execute(GET(uri='facilities/{}/areas'.format(facility_id)), execute)
+    
+    def addSensorToArea(self, area_id, sensor_id, execute=True):
+        return self.execute(POST(uri='areas/{}/sensors/{}'.format(area_id, sensor_id)))
+
+    def getSensorsForArea(self, area_id,limit=10, offset=0, execute=True):
+        params = {'limit': limit,
+                  'offset': offset}
+                  
+        return PagedResponse(self.execute(GET(uri='areas/{}/sensors'.format(area_id)).params(params), execute))

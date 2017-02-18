@@ -154,7 +154,7 @@ class FeedsService(Service):
                     'limit': limit,
                   'offset': offset}
 
-        return self.execute(GET(uri='outputs').params(params), execute=execute)
+        return PagedResponse(self.execute(GET(uri='outputs').params(params), execute=execute))
 
     def getOutputs(self, id=None, limit=100, offset=0, execute=True):
 
