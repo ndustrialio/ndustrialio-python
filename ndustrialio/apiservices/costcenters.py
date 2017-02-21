@@ -15,9 +15,13 @@ class CostCentersService(Service):
         return 'SgbCopArnGMa9PsRlCVUCVRwxocntlg0'
 
     def getFacilities(self, execute=True):
-
         return self.execute(GET(uri='facilities'), execute)
     
+    def getFacility(self, facility_id, execute=True):
+        return self.execute(GET(uri='facilities/{}'.format(facility_id)), execute)
+    
+    def getBuildingsForFacility(self, facility_id, execute=True):
+        return self.execute(GET(uri='facilities/{}/buildings'.format(facility_id)), execute)
     
     def addFacility(self, facility_obj, execute=True):
         return self.execute(POST(uri='facilities').body(facility_obj))
