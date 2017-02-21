@@ -192,5 +192,31 @@ class FeedsService(Service):
                             .params(params), execute=execute)
 
     def getLatestStatus(self, execute=True):
-
         return self.execute(GET('feeds/status/latest'), execute=execute)
+    
+    def getFieldDataMetrics(self, output_id_list, field_label, stale_seconds=None, start_time=None):
+        
+        assert isinstance(output_id_list, list)
+        assert isinstance(field_label, str)
+        test = [True if isinstance(id, int) else False for id in output_id_list]
+        if False in test:
+            raise Exception('All elements in the output_id_list must be integers (FeedsService.getFieldDataMetrics)')
+        
+        body = {
+                "output_id_list": output_id_list,
+                "labels": [field_label]
+                }
+        
+        params = {}
+        
+        if stale_seconds:
+            assert isinstance(stale_seconds, int)
+            params["stale_seconds"] = stale_seconds
+        
+        if start_time:
+            assert isinstance(start_time, datetime)
+            params["timeStart"] = (start_time - datetime(1970,1,1)).total_seconds()
+        
+        return self.execute(POST(uri='metrics/fieldDataMetrics')
+                            .body(body)
+                            .params(params))
