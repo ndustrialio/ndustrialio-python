@@ -44,8 +44,8 @@ class RatesService(Service):
         assert isinstance(id, int)
         assert isinstance(timeStart, datetime)
         assert isinstance(timeEnd, datetime)
-        params['timeEnd'] = timeEnd.strftime('%s')
-        params['timeStart'] = timeStart.strftime('%s')
+        params['timeEnd'] = get_epoch_time(timeEnd)
+        params['timeStart'] = get_epoch_time(timeStart)
         
         return self.execute(GET(uri='schedules/{}/usage/periods'.format(id)).params(params), execute)
     
@@ -63,8 +63,8 @@ class RatesService(Service):
         assert isinstance(id, int)
         assert isinstance(timeStart, datetime)
         assert isinstance(timeEnd, datetime)
-        params['timeEnd'] = timeEnd.strftime('%s')
-        params['timeStart'] = timeStart.strftime('%s')
+        params['timeEnd'] = get_epoch_time(timeEnd)
+        params['timeStart'] = get_epoch_time(timeStart)
         
         return self.execute(GET(uri='schedules/{}/demand/periods'.format(id)).params(params), execute)
     

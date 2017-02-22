@@ -3,12 +3,28 @@ import os
 from auth0.v2.authentication import Oauth
 import json
 from datetime import datetime
+import pytz
+from tzlocal import get_localzone
 
 API_VERSION = 'v1'
 
 BASE_URL = 'http://api.ndustrial.io'
 
 AUTH0_URL = 'ndustrialio.auth0.com'
+
+def delocalize_datetime(dt_object):
+    return dt_object.replace(tzinfo=get_localzone()).astimezone(pytz.utc)
+
+def get_epoch_time(dt_object):
+    if dt_object.tzinfo is None:
+        tz_aware_date = dt_object.replace(tzinfo=get_localzone())
+    else:
+        tz_aware_date = dt_object
+    
+    utc_1970 = datetime(1970, 1, 1).replace(tzinfo=pytz.utc)
+    
+    return (delocalize_datetime(dt_object) - utc_1970).total_seconds()
+
 
 
 class ApiClient(object):
