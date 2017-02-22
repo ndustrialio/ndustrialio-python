@@ -8,4 +8,12 @@ setup(name='ndustrialio-python',
       author_email='jhunt@ndustrial.io',
       license='',
       packages=find_packages(),
+      install_requires=[
+        'pytz',
+        'tzlocal',
+        'requests'
+      ],
+      dependency_links=[
+        'git+https://git@github.com/ndustrialio/auth0-python.git'
+      ],
       zip_safe=False)
