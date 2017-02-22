@@ -23,7 +23,7 @@ def get_epoch_time(dt_object):
     
     utc_1970 = datetime(1970, 1, 1).replace(tzinfo=pytz.utc)
     
-    return (delocalize_datetime(dt_object) - utc_1970).total_seconds()
+    return int(delocalize_datetime(dt_object) - utc_1970).total_seconds())
 
 
 
