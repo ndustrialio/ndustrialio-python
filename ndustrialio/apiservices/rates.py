@@ -18,7 +18,13 @@ class RatesService(Service):
     def getSchedules(self, execute=True):
 
         return self.execute(GET(uri='schedules'), execute)
-
+        
+    def getScheduleInfo(self, rate_schedule_id, execute=True):
+        
+        assert isinstance(rate_schedule_id, int)
+        
+        return self.execute(GET(uri='/schedules/{}'.format(rate_schedule_id)), execute)
+    
     def getScheduleRTPPeriods(self, id, orderBy=None, reverseOrder=False, execute=True):
         
         params = {}
