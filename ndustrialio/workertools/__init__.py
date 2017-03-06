@@ -43,7 +43,7 @@ class BaseWorker(ConfiguredComponent):
     def startWorker(self):
 
         run = self.contxt.startWorkerRun()
-        print 'Worker run ID: '+ run['id']
+        print('Worker run ID: '+ run['id'])
         self.run_id = run['id']
         self.doWork()
         self.contxt.endWorkerRun(self.run_id)
