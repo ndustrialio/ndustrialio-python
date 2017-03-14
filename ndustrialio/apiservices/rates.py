@@ -62,8 +62,9 @@ class RatesService(Service):
         id (int) - the rate schedule id
         timeStart (datetime) - start of the time range
         timeEnd (datetime) - end of the time range
+        season_type (str) - season type for demand (tou or flat)
     '''
-    def getDemandPeriods(self, id, timeStart, timeEnd, execute=True):
+    def getDemandPeriods(self, id, timeStart, timeEnd, season_type=None, execute=True):
         
         params = {}
         assert isinstance(id, int)
@@ -71,6 +72,9 @@ class RatesService(Service):
         assert isinstance(timeEnd, datetime)
         params['timeEnd'] = get_epoch_time(timeEnd)
         params['timeStart'] = get_epoch_time(timeStart)
+        if season_type is not None:
+			assert isinstance(season_type, str)
+			params['season_type'] = season_type
         
         return self.execute(GET(uri='schedules/{}/demand/periods'.format(id)).params(params), execute)
     
