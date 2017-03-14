@@ -61,7 +61,7 @@ class SFTPClient():
         try:
             ## now manually go in and connect using a private key
             if len(private_key_path) == 0:
-                print 'Must provide private_key_path environment variable!'
+                print('Must provide private_key_path environment variable!')
                 # add custom exception here
                 raise SFTPConnectionException('Must provide private key path')
 
