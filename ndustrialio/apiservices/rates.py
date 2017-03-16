@@ -73,8 +73,8 @@ class RatesService(Service):
         params['timeEnd'] = get_epoch_time(timeEnd)
         params['timeStart'] = get_epoch_time(timeStart)
         if season_type is not None:
-			assert isinstance(season_type, str)
-			params['season_type'] = season_type
+            assert isinstance(season_type, str)
+            params['season_type'] = season_type
         
         return self.execute(GET(uri='schedules/{}/demand/periods'.format(id)).params(params), execute)
     
