@@ -10,7 +10,7 @@ class FeedsService(Service):
 
 
     def baseURL(self):
-        return 'https://feeds.api.ndustrial.io'
+        return 'https://localhost:3000'
 
     def audience(self):
 
@@ -33,6 +33,9 @@ class FeedsService(Service):
 
         return PagedResponse(self.execute(GET(uri='feeds').params(params), execute=execute))
 
+    def getHourlyMetrics(self, execute=True):
+
+        return PagedResponse(self.execute(GET(uri='/metrics/feed_key/egauge/field_descriptor/descriptor/hourlyMetrics'), execute=execute))
 
     def createFeed(self, key, timezone, type, facility_id, execute=True):
 
