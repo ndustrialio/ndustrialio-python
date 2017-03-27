@@ -13,11 +13,12 @@ BASE_URL = 'http://api.ndustrial.io'
 AUTH0_URL = 'ndustrialio.auth0.com'
 
 def delocalize_datetime(dt_object):
-    return dt_object.replace(tzinfo=get_localzone()).astimezone(pytz.utc)
+    localized_dt = get_localzone().localize(dt_object)
+    return localized_dt.astimezone(pytz.utc)
 
 def get_epoch_time(dt_object):
     if dt_object.tzinfo is None:
-        tz_aware_date = dt_object.replace(tzinfo=get_localzone())
+        tz_aware_date = get_localzone().localize(dt_object)
     else:
         tz_aware_date = dt_object
     
