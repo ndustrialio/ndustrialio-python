@@ -68,9 +68,13 @@ class ApiClient(object):
             msg = json.loads(response.text)['message']
             http_error_msg = '%s Client Error: %s - %s' % (response.status_code, response.reason, msg)
 
-        elif 500 <= response.status_code < 600:
+        elif response.status_code == 500:
             msg = json.loads(response.text)['message']
             http_error_msg = '%s Server Error: %s - %s' % (response.status_code, response.reason, msg)
+
+        elif 500 < response.status_code < 600:
+            http_error_msg = '%s Server Error: %s - %s' % (response.status_code, response.reason, response.text)
+
 
         if http_error_msg:
             raise requests.exceptions.HTTPError(http_error_msg, response=self)
