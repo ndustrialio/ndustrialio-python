@@ -33,9 +33,12 @@ class FeedsService(Service):
 
         return PagedResponse(self.execute(GET(uri='feeds').params(params), execute=execute))
 
-    def getHourlyMetrics(self, execute=True):
+    def getHourlyMetrics(self, limit=100, offset=0, execute=True):
 
-        return PagedResponse(self.execute(GET(uri='/metrics/feed_key/egauge/field_descriptor/descriptor/hourlyMetrics'), execute=execute))
+        params = {'limit': limit,
+                  'offset': offset}
+
+        return self.execute(GET(uri='metrics/feed_key/egauge6529/field_descriptor/main-p/hourlyMetrics').params(params), execute=execute)
 
     def createFeed(self, key, timezone, type, facility_id, execute=True):
 
