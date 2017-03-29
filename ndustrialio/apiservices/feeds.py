@@ -10,7 +10,7 @@ class FeedsService(Service):
 
 
     def baseURL(self):
-        return 'https://localhost:3000'
+        return 'http://localhost:3000'
 
     def audience(self):
 
@@ -33,12 +33,12 @@ class FeedsService(Service):
 
         return PagedResponse(self.execute(GET(uri='feeds').params(params), execute=execute))
 
-    def getHourlyMetrics(self, limit=100, offset=0, execute=True):
+    def getHourlyMetrics(self, feed_key, field_descriptor, limit=100, offset=0, execute=True):
 
         params = {'limit': limit,
                   'offset': offset}
 
-        return self.execute(GET(uri='metrics/feed_key/egauge6529/field_descriptor/main-p/hourlyMetrics').params(params), execute=execute)
+        return self.execute(GET(uri='metrics/feed_key/{}/field_descriptor/{}/hourlyMetrics'.format(feed_key, field_descriptor)).params(params), execute=execute)
 
     def createFeed(self, key, timezone, type, facility_id, execute=True):
 
