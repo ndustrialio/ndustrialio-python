@@ -31,8 +31,11 @@ class FeedsService(Service):
 
         params = {"key": key}
 
-        return self.execute(GET(uri='feeds').params(params), execute=execute)
+        if execute:
+            return PagedResponse(self.execute(GET(uri='feeds').params(params), execute=True))
 
+        else:
+            return self.execute(GET(uri='feeds').params(params), execute=False)
 
     def createFeed(self, key, timezone, type, facility_id, execute=True):
 
@@ -162,7 +165,11 @@ class FeedsService(Service):
                   'offset': offset}
 
 
-        return self.execute(GET(uri='outputs').params(params), execute=execute)
+        if execute:
+            return PagedResponse(self.execute(GET(uri='outputs').params(params), execute=True))
+
+        else:
+            return self.execute(GET(uri='outputs').params(params), execute=False)
 
     def getOutputs(self, id=None, limit=100, offset=0, execute=True):
 
