@@ -13,11 +13,12 @@ BASE_URL = 'http://api.ndustrial.io'
 AUTH0_URL = 'ndustrialio.auth0.com'
 
 def delocalize_datetime(dt_object):
-    return dt_object.replace(tzinfo=get_localzone()).astimezone(pytz.utc)
+    localized_dt = get_localzone().localize(dt_object)
+    return localized_dt.astimezone(pytz.utc)
 
 def get_epoch_time(dt_object):
     if dt_object.tzinfo is None:
-        tz_aware_date = dt_object.replace(tzinfo=get_localzone())
+        tz_aware_date = get_localzone().localize(dt_object)
     else:
         tz_aware_date = dt_object
     
@@ -74,9 +75,13 @@ class ApiClient(object):
             msg = json.loads(response.text)['message']
             http_error_msg = '%s Client Error: %s - %s' % (response.status_code, response.reason, msg)
 
-        elif 500 <= response.status_code < 600:
+        elif response.status_code == 500:
             msg = json.loads(response.text)['message']
             http_error_msg = '%s Server Error: %s - %s' % (response.status_code, response.reason, msg)
+
+        elif 500 < response.status_code < 600:
+            http_error_msg = '%s Server Error: %s - %s' % (response.status_code, response.reason, response.text)
+
 
         if http_error_msg:
             raise requests.exceptions.HTTPError(http_error_msg, response=self)
