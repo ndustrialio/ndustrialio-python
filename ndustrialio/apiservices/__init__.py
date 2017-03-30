@@ -37,22 +37,31 @@ class ApiClient(object):
     def execute(self, api_request):
 
         headers = {}
+        retries = 3
+        status = -1
 
-        # authorize this request?
-        if api_request.authorize():
-            headers['Authorization'] = 'Bearer ' + self.access_token
+        response = None
 
-        if api_request.method() == 'GET':
-            response=requests.get(url=str(api_request), headers=headers)
-        if api_request.method() == 'POST':
-            if api_request.content_type == ApiRequest.URLENCODED_CONTENT_TYPE:
-                response = requests.post(url=str(api_request), data=api_request.body(), headers=headers)
-            else:
-                response = requests.post(url=str(api_request), json=api_request.body(), headers=headers)
-        if api_request.method() == 'PUT':
-            response=requests.put(url=str(api_request), data=api_request.body(), headers=headers)
-        if api_request.method() == 'DELETE':
-            response=requests.delete(url=str(api_request), headers=headers)
+        while status in [-1, 504] and retries > 0:
+
+            # authorize this request?
+            if api_request.authorize():
+                headers['Authorization'] = 'Bearer ' + self.access_token
+
+            if api_request.method() == 'GET':
+                response=requests.get(url=str(api_request), headers=headers)
+            if api_request.method() == 'POST':
+                if api_request.content_type == ApiRequest.URLENCODED_CONTENT_TYPE:
+                    response = requests.post(url=str(api_request), data=api_request.body(), headers=headers)
+                else:
+                    response = requests.post(url=str(api_request), json=api_request.body(), headers=headers)
+            if api_request.method() == 'PUT':
+                response=requests.put(url=str(api_request), data=api_request.body(), headers=headers)
+            if api_request.method() == 'DELETE':
+                response=requests.delete(url=str(api_request), headers=headers)
+
+            status = response.status_code
+            retries -= 1
 
         return self.process_response(response)
 
