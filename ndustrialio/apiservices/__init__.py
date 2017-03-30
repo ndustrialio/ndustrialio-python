@@ -38,9 +38,11 @@ class ApiClient(object):
 
         headers = {}
         retries = 3
-        status = None
+        status = -1
 
-        while (status is None | status == 504) & retries > 0:
+        response = None
+
+        while status in [-1, 504] and retries > 0:
 
             # authorize this request?
             if api_request.authorize():
