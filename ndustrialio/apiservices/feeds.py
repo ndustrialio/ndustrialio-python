@@ -210,18 +210,18 @@ class FeedsService(Service):
         return self.execute(GET('feeds/status/latest'), execute=execute)
 
 
-    def batch(self, api_requests):
-
-        batch_body = {}
-
-        i = 0
-
-        for api_request in api_requests:
-            batch_body['request_'+str(i)] = {'method': api_request.method(),
-                                             'uri': str(api_request)}
-            i+=1
-
-        return self.execute(POST(uri='batch').body(batch_body), execute=True)
+    # def batch(self, api_requests):
+    #
+    #     batch_body = {}
+    #
+    #     i = 0
+    #
+    #     for api_request in api_requests:
+    #         batch_body['request_'+str(i)] = {'method': api_request.method(),
+    #                                          'uri': str(api_request)}
+    #         i+=1
+    #
+    #     return self.execute(POST(uri='batch').body(batch_body), execute=True)
     
     def getFieldDataMetrics(self, output_id_list, field_label, stale_seconds=None, start_time=None):
         
