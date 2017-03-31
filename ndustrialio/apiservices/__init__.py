@@ -17,14 +17,15 @@ def delocalize_datetime(dt_object):
     return localized_dt.astimezone(pytz.utc)
 
 def get_epoch_time(dt_object):
+
     if dt_object.tzinfo is None:
-        tz_aware_date = get_localzone().localize(dt_object)
-    else:
-        tz_aware_date = dt_object
-    
+        # assuming an naive datetime is in the callers timezone
+        # as set on the system,
+        dt_object = get_localzone().localize(dt_object)
+
     utc_1970 = datetime(1970, 1, 1).replace(tzinfo=pytz.utc)
     
-    return int((delocalize_datetime(dt_object) - utc_1970).total_seconds())
+    return int((dt_object.astimezone(pytz.utc) - utc_1970).total_seconds())
 
 
 
