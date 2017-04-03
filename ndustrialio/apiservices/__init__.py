@@ -17,14 +17,15 @@ def delocalize_datetime(dt_object):
     return localized_dt.astimezone(pytz.utc)
 
 def get_epoch_time(dt_object):
+
     if dt_object.tzinfo is None:
-        tz_aware_date = get_localzone().localize(dt_object)
-    else:
-        tz_aware_date = dt_object
-    
+        # assuming an naive datetime is in the callers timezone
+        # as set on the system,
+        dt_object = get_localzone().localize(dt_object)
+
     utc_1970 = datetime(1970, 1, 1).replace(tzinfo=pytz.utc)
     
-    return int((delocalize_datetime(dt_object) - utc_1970).total_seconds())
+    return int((dt_object.astimezone(pytz.utc) - utc_1970).total_seconds())
 
 
 
@@ -37,22 +38,31 @@ class ApiClient(object):
     def execute(self, api_request):
 
         headers = {}
+        retries = 3
+        status = -1
 
-        # authorize this request?
-        if api_request.authorize():
-            headers['Authorization'] = 'Bearer ' + self.access_token
+        response = None
 
-        if api_request.method() == 'GET':
-            response=requests.get(url=str(api_request), headers=headers)
-        if api_request.method() == 'POST':
-            if api_request.content_type == ApiRequest.URLENCODED_CONTENT_TYPE:
-                response = requests.post(url=str(api_request), data=api_request.body(), headers=headers)
-            else:
-                response = requests.post(url=str(api_request), json=api_request.body(), headers=headers)
-        if api_request.method() == 'PUT':
-            response=requests.put(url=str(api_request), data=api_request.body(), headers=headers)
-        if api_request.method() == 'DELETE':
-            response=requests.delete(url=str(api_request), headers=headers)
+        while status in [-1, 504] and retries > 0:
+
+            # authorize this request?
+            if api_request.authorize():
+                headers['Authorization'] = 'Bearer ' + self.access_token
+
+            if api_request.method() == 'GET':
+                response=requests.get(url=str(api_request), headers=headers)
+            if api_request.method() == 'POST':
+                if api_request.content_type == ApiRequest.URLENCODED_CONTENT_TYPE:
+                    response = requests.post(url=str(api_request), data=api_request.body(), headers=headers)
+                else:
+                    response = requests.post(url=str(api_request), json=api_request.body(), headers=headers)
+            if api_request.method() == 'PUT':
+                response=requests.put(url=str(api_request), data=api_request.body(), headers=headers)
+            if api_request.method() == 'DELETE':
+                response=requests.delete(url=str(api_request), headers=headers)
+
+            status = response.status_code
+            retries -= 1
 
         return self.process_response(response)
 

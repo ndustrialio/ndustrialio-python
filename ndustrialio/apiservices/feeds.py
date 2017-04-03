@@ -31,7 +31,10 @@ class FeedsService(Service):
 
         params = {"key": key}
 
-        return PagedResponse(self.execute(GET(uri='feeds').params(params), execute=execute))
+        if execute:
+            return PagedResponse(self.execute(GET(uri='feeds').params(params), execute=True))
+        else:
+            return self.execute(GET(uri='feeds').params(params), execute=False)
 
     def getHourlyMetrics(self, feed_key, field_descriptor, limit=100, offset=0, execute=True):
 
@@ -146,11 +149,18 @@ class FeedsService(Service):
         if time_end:
             params['timeEnd'] = str((time_end - datetime(1970,1,1)).total_seconds())
 
+        # TODO: remove this.  The caller should wrap response objects
+        if execute:
+            return DataResponse(data=self.execute(GET('outputs/{}/fields/{}/data'
+                                                      .format(output_id, field_human_name))
+                                                  .params(params), execute=True),
+                                client=self.client)
+        else:
+            return self.execute(GET('outputs/{}/fields/{}/data'
+                                                      .format(output_id, field_human_name))
+                                                  .params(params), execute=False)
 
-        return DataResponse(data=self.execute(GET('outputs/{}/fields/{}/data'
-                                .format(output_id, field_human_name))
-                                .params(params), execute=execute),
-                            client=self.client)
+
 
     def getOutputsForFacility(self, facility_id=None, limit=100, offset=0, execute=True):
 
@@ -160,7 +170,12 @@ class FeedsService(Service):
                     'limit': limit,
                   'offset': offset}
 
-        return PagedResponse(self.execute(GET(uri='outputs').params(params), execute=execute))
+
+        if execute:
+            return PagedResponse(self.execute(GET(uri='outputs').params(params), execute=True))
+
+        else:
+            return self.execute(GET(uri='outputs').params(params), execute=False)
 
     def getOutputs(self, id=None, limit=100, offset=0, execute=True):
 
@@ -199,6 +214,20 @@ class FeedsService(Service):
 
     def getLatestStatus(self, execute=True):
         return self.execute(GET('feeds/status/latest'), execute=execute)
+
+
+    # def batch(self, api_requests):
+    #
+    #     batch_body = {}
+    #
+    #     i = 0
+    #
+    #     for api_request in api_requests:
+    #         batch_body['request_'+str(i)] = {'method': api_request.method(),
+    #                                          'uri': str(api_request)}
+    #         i+=1
+    #
+    #     return self.execute(POST(uri='batch').body(batch_body), execute=True)
     
     def getFieldDataMetrics(self, output_id_list, field_label, stale_seconds=None, start_time=None):
         
