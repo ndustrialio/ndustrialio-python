@@ -16,7 +16,6 @@ class FeedsService(Service):
 
         return 'iznTb30Sfp2Jpaf398I5DN6MyPuDCftA'
 
-
     def getFeeds(self, id=None, execute=True):
 
         if id is None:
@@ -48,9 +47,6 @@ class FeedsService(Service):
         return self.execute(POST(uri='feeds').body(feed_data)
                             .content_type(ApiRequest.URLENCODED_CONTENT_TYPE), execute = execute)
 
-
-
-
     def createOutput(self, feed_id, facility_id, label, type, key=None, execute=True):
 
         output_data = {'feed_id': feed_id,
@@ -78,7 +74,6 @@ class FeedsService(Service):
         return self.execute(POST(uri='outputs/{}/fields'.format(output_id)).body(field_data)
                             .content_type(ApiRequest.URLENCODED_CONTENT_TYPE), execute = execute)
 
-
     def getFieldDescriptors(self, feed_id, limit=100, offset=0, execute=True):
 
         # assert isinstance(feed_id, int)
@@ -102,7 +97,6 @@ class FeedsService(Service):
         return self.execute(GET('feeds/{}/fields/unprovisioned'
                                 .format(feed_id)).params(params), execute=execute)
 
-
     def getFeedOutputs(self, feed_id, limit=100, offset=0, execute=True):
 
         # assert isinstance(feed_id, int)
@@ -119,11 +113,11 @@ class FeedsService(Service):
         # assert isinstance(feed_id, int)
         # assert isinstance(field_descriptor, str)
 
-        params = {'time_start': str((time_start - datetime(1970,1,1)).total_seconds())}
+        params = {'time_start': str(get_epoch_time(time_start))}
 
         if time_end:
             assert isinstance(time_end, datetime)
-            params['time_end'] = str((time_end - datetime(1970,1,1)).total_seconds())
+            params['time_end'] = str(get_epoch_time(time_end))
 
         return self.execute(GET('feeds/{}/fields/{}/data'
                                 .format(feed_id, field_descriptor))
@@ -136,12 +130,12 @@ class FeedsService(Service):
         # assert isinstance(time_start, datetime)
         # assert window in [0, 60, 900, 3600]
 
-        params = {'timeStart': str((time_start - datetime(1970,1,1)).total_seconds()),
+        params = {'timeStart': str(get_epoch_time(time_start)),
                     'window': str(window),
                     'limit': limit}
 
         if time_end:
-            params['timeEnd'] = str((time_end - datetime(1970,1,1)).total_seconds())
+            params['timeEnd'] = str(get_epoch_time(time_end))
 
         # TODO: remove this.  The caller should wrap response objects
         if execute:
@@ -153,8 +147,6 @@ class FeedsService(Service):
             return self.execute(GET('outputs/{}/fields/{}/data'
                                                       .format(output_id, field_human_name))
                                                   .params(params), execute=False)
-
-
 
     def getOutputsForFacility(self, facility_id=None, limit=100, offset=0, execute=True):
 
@@ -183,7 +175,6 @@ class FeedsService(Service):
                   'offset': offset}
 
         return self.execute(GET(uri=uri).params(params), execute=execute)
-
 
     def getFields(self, output_id, execute=True):
 
@@ -222,30 +213,30 @@ class FeedsService(Service):
     #         i+=1
     #
     #     return self.execute(POST(uri='batch').body(batch_body), execute=True)
-    
+
     def getFieldDataMetrics(self, output_id_list, field_label, stale_seconds=None, start_time=None):
-        
+
         assert isinstance(output_id_list, list)
         assert isinstance(field_label, str)
         test = [True if isinstance(id, int) else False for id in output_id_list]
         if False in test:
             raise Exception('All elements in the output_id_list must be integers (FeedsService.getFieldDataMetrics)')
-        
+
         body = {
                 "output_id_list": output_id_list,
                 "labels": [field_label]
                 }
-        
+
         params = {}
-        
+
         if stale_seconds:
             assert isinstance(stale_seconds, int)
             params["stale_seconds"] = stale_seconds
-        
+
         if start_time:
             assert isinstance(start_time, datetime)
-            params["timeStart"] = (start_time - datetime(1970,1,1)).total_seconds()
-        
+            params["timeStart"] = get_epoch_time(start_time)
+
         return self.execute(POST(uri='metrics/fieldDataMetrics')
                             .body(body)
                             .params(params))
