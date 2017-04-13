@@ -241,14 +241,12 @@ class FeedsService(Service):
                             .body(body)
                             .params(params))
 
-    def getBatchFieldDataMetrics(self, start_time, end_time, minute_interval, output_id_list, field_human_name):
+    def getBatchFieldDataMetrics(self, start_time_datetime, end_time_datetime, minute_interval, output_id_list, field_human_name):
 
         time_array = []
         value_array = []
 
-        num_bins, start_time_datetime, end_time_datetime = calculateNumberOfBinsAndEndTime(start_time,
-                                                                                           end_time,
-                                                                                           minute_interval)
+        num_bins, end_time_datetime = calculateNumberOfBinsAndEndTime(start_time_datetime, end_time_datetime, minute_interval)
         start_time_utc = time.mktime(start_time_datetime)
         end_time_utc = time.mktime(end_time_datetime)
 

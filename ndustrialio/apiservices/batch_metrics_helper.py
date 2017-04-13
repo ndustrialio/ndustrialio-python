@@ -2,12 +2,10 @@ from datetime import timedelta, datetime
 from scipy import stats
 import numpy
 
-def calculateNumberOfBinsAndEndTime(start_time, end_time, minute_interval):
-    start_time_datetime = datetime.strptime(start_time, 'YYYY-MM-DD HH:MM:SS')
+def calculateNumberOfBinsAndEndTime(start_time_datetime, end_time_datetime, minute_interval):
     start_time_timedelta = timedelta(hours=start_time_datetime.hour,
                                      minutes=start_time_datetime.minute,
                                      seconds=start_time_datetime.second)
-    end_time_datetime = datetime.strptime(end_time, 'YYYY-MM-DD HH:MM:SS')
     end_time_timedelta = timedelta(hours=end_time_datetime.hour,
                                    minutes=end_time_datetime.minute,
                                    seconds=end_time_datetime.second)
@@ -30,7 +28,7 @@ def calculateNumberOfBinsAndEndTime(start_time, end_time, minute_interval):
 
     new_end_time_datetime = start_time_datetime + new_end_time_timedelta
 
-    return num_bins, start_time_datetime, new_end_time_datetime
+    return num_bins, new_end_time_datetime
 
 def calculateMetrics(time_array, value_array, start_time_utc, end_time_utc, num_bins):
 
