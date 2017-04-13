@@ -1,5 +1,5 @@
-from datetime import datetime
-
+import time
+from batch_metrics_helper import calculateNumberOfBinsAndEndTime, calculateMetrics
 from ndustrialio.apiservices import *
 
 class FeedsService(Service):
@@ -240,3 +240,31 @@ class FeedsService(Service):
         return self.execute(POST(uri='metrics/fieldDataMetrics')
                             .body(body)
                             .params(params))
+
+    def getBatchFieldDataMetrics(self, start_time, end_time, minute_interval, output_id_list, field_human_name):
+
+        time_array = []
+        value_array = []
+
+        num_bins, start_time_datetime, end_time_datetime = calculateNumberOfBinsAndEndTime(start_time,
+                                                                                           end_time,
+                                                                                           minute_interval)
+        start_time_utc = time.mktime(start_time_datetime)
+        end_time_utc = time.mktime(end_time_datetime)
+
+        for output_id in output_id_list:
+
+            data = self.getData(output_id=output_id,
+                                field_human_name=field_human_name,
+                                time_end=end_time_datetime,
+                                time_start=start_time_datetime,
+                                window=60)
+
+            timestamp_datetime = datetime.strptime(data['timestamp'], 'YYYY-MM-DD HH:MM:SS')
+            timestamp_utc = time.mktime(timestamp_datetime.timetuple)
+            time_array.append(timestamp_utc)
+            value_array.append(data['value'])
+
+        metrics_map = calculateMetrics(time_array, value_array, start_time_utc, end_time_utc, num_bins)
+
+        return metrics_map
