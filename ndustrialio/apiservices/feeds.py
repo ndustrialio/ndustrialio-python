@@ -241,27 +241,32 @@ class FeedsService(Service):
                             .body(body)
                             .params(params))
 
-    def getBatchFieldDataMetrics(self, start_time_datetime, end_time_datetime, minute_interval, output_id_list, field_human_name):
+    def getBatchFieldDataMetrics(self, start_time_datetime, end_time_datetime, minute_interval, field_identification_list):
 
         time_array = []
         value_array = []
 
         num_bins, end_time_datetime = calculateNumberOfBinsAndEndTime(start_time_datetime, end_time_datetime, minute_interval)
-        start_time_utc = time.mktime(start_time_datetime)
-        end_time_utc = time.mktime(end_time_datetime)
+        start_time_utc = time.mktime(start_time_datetime.timetuple())
+        end_time_utc = time.mktime(end_time_datetime.timetuple())
 
-        for output_id in output_id_list:
+        for field_identification in field_identification_list:
 
-            data = self.getData(output_id=output_id,
-                                field_human_name=field_human_name,
+            data = self.getData(output_id=field_identification['output_id'],
+                                field_human_name=field_identification['field_human_name'],
                                 time_end=end_time_datetime,
                                 time_start=start_time_datetime,
                                 window=60)
 
-            timestamp_datetime = datetime.strptime(data['timestamp'], 'YYYY-MM-DD HH:MM:SS')
-            timestamp_utc = time.mktime(timestamp_datetime.timetuple)
-            time_array.append(timestamp_utc)
-            value_array.append(data['value'])
+            for record in data.records:
+
+                timestamp_datetime = datetime.strptime(record['event_time'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                timestamp_utc = time.mktime(timestamp_datetime.timetuple())
+                try:
+                    value_array.append(float(record['value']))
+                    time_array.append(timestamp_utc)
+                except:
+                    print 'Bad value: {}'.format(record['value'])
 
         metrics_map = calculateMetrics(time_array, value_array, start_time_utc, end_time_utc, num_bins)
 
