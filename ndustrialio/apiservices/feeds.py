@@ -10,7 +10,7 @@ class FeedsService(Service):
 
 
     def baseURL(self):
-        return 'http://localhost:3000'
+        return 'https://feeds.api.ndustrial.io'
 
     def audience(self):
 
