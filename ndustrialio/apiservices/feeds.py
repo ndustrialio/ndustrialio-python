@@ -1,12 +1,14 @@
 import time
-from batch_metrics_helper import calculateNumberOfBinsAndEndTime, calculateMetrics
 from ndustrialio.apiservices import *
+from ndustrialio.apiservices.helpers.data_helper import DataHelper
+
 
 class FeedsService(Service):
 
 
     def __init__(self, client_id, client_secret=None):
         super(FeedsService, self).__init__(client_id, client_secret)
+        self.data_helper = DataHelper()
 
 
     def baseURL(self):
@@ -245,29 +247,55 @@ class FeedsService(Service):
 
         time_array = []
         value_array = []
+        aggregate_batch_data = []
+        data_request_map = {}
+        request_count = 0
+        MAX_BATCH_REQUESTS = 20
 
-        num_bins, end_time_datetime = calculateNumberOfBinsAndEndTime(start_time_datetime, end_time_datetime, minute_interval)
+        num_bins, end_time_datetime = self.data_helper.calculateNumberOfBinsAndEndTime(start_time_datetime, end_time_datetime, minute_interval)
         start_time_utc = time.mktime(start_time_datetime.timetuple())
         end_time_utc = time.mktime(end_time_datetime.timetuple())
 
         for field_identification in field_identification_list:
 
-            data = self.getData(output_id=field_identification['output_id'],
-                                field_human_name=field_identification['field_human_name'],
+            output_id = field_identification['output_id']
+            field_human_name = field_identification['field_human_name']
+
+            key = "{}.{}".format(output_id, field_human_name)
+
+            data_request = self.getData(output_id=output_id,
+                                field_human_name=field_human_name,
                                 time_end=end_time_datetime,
                                 time_start=start_time_datetime,
-                                window=60)
+                                window=60,
+                                execute=False)
 
-            for record in data.records:
+            data_request_map[key] = {'method': data_request.method(),
+                                     'uri': str(data_request)}
 
-                timestamp_datetime = datetime.strptime(record['event_time'], "%Y-%m-%dT%H:%M:%S.%fZ")
-                timestamp_utc = time.mktime(timestamp_datetime.timetuple())
-                try:
-                    value_array.append(float(record['value']))
-                    time_array.append(timestamp_utc)
-                except:
-                    print 'Bad value: {}'.format(record['value'])
+            request_count += 1
 
-        metrics_map = calculateMetrics(time_array, value_array, start_time_utc, end_time_utc, num_bins)
+            if request_count == MAX_BATCH_REQUESTS:
+                batch_data = self.execute(POST(uri='batch').body(data_request_map), execute=True)
+                for key, value in batch_data.items():
+                    aggregate_batch_data += value['body']['records']
+                request_count = 0
+                data_request_map = {}
+
+        batch_data = self.execute(POST(uri='batch').body(data_request_map), execute=True)
+        for key, value in batch_data.items():
+            aggregate_batch_data += value['body']['records']
+
+        for record in aggregate_batch_data:
+
+            timestamp_datetime = datetime.strptime(record['event_time'], "%Y-%m-%dT%H:%M:%S.%fZ")
+            timestamp_utc = time.mktime(timestamp_datetime.timetuple())
+            try:
+                value_array.append(float(record['value']))
+                time_array.append(timestamp_utc)
+            except:
+                print ('Bad value: {}'.format(record['value']))
+
+        metrics_map = self.data_helper.calculateMetrics(time_array, value_array, start_time_utc, end_time_utc, num_bins)
 
         return metrics_map
