@@ -1,13 +1,11 @@
-from datetime import datetime
-
 from ndustrialio.apiservices import *
+
 
 class FeedsService(Service):
 
 
     def __init__(self, client_id, client_secret=None):
         super(FeedsService, self).__init__(client_id, client_secret)
-
 
     def baseURL(self):
         return 'https://feeds.api.ndustrial.io'
@@ -240,3 +238,4 @@ class FeedsService(Service):
         return self.execute(POST(uri='metrics/fieldDataMetrics')
                             .body(body)
                             .params(params))
+

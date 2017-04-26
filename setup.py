@@ -11,7 +11,9 @@ setup(name='ndustrialio-python',
       install_requires=[
         'pytz',
         'tzlocal',
-        'requests'
+        'requests',
+        'scipy',
+        'numpy'
       ],
       dependency_links=[
         'git+https://git@github.com/ndustrialio/auth0-python.git'
