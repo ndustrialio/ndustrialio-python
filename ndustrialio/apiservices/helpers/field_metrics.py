@@ -38,8 +38,8 @@ class FieldMetrics:
         MAX_BATCH_REQUESTS = 20
 
         num_bins, end_time_datetime = self.calculateNumberOfBinsAndEndTime(start_time_datetime, end_time_datetime, minute_interval)
-        start_time_utc = time.mktime(start_time_datetime.timetuple())
-        end_time_utc = time.mktime(end_time_datetime.timetuple())
+        start_time_utc = get_epoch_time(start_time_datetime)
+        end_time_utc = get_epoch_time(end_time_datetime)
 
         for field_identification in field_identification_list:
 
