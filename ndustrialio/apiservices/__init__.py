@@ -90,7 +90,7 @@ class PagedResponse(object):
 
     def __init__(self, data):
 
-        self.total_records = data['_meta']['totalRecords']
+        self.total_records = data['_meta']['count']
         self.offset = data['_meta']['offset']
 
         self.records = data['records']
