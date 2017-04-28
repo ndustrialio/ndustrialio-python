@@ -94,7 +94,7 @@ class PagedResponse(object):
             self.total_records = data['_meta']['count']
             self.offset = data['_meta']['offset']
         else:
-            self.total_records = data['_metadata']['count']
+            self.total_records = data['_metadata']['totalRecords']
             self.offset = data['_metadata']['offset']
 
         self.records = data['records']
