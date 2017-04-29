@@ -27,6 +27,8 @@ class FieldMetrics:
     '''
     def getBatchFieldDataMetrics(self, start_time_datetime, end_time_datetime, minute_interval, field_identification_list):
 
+        assert isinstance(field_identification_list, list)
+
         if start_time_datetime > end_time_datetime:
             raise Exception('Start time must be less than end time')
 
@@ -76,6 +78,8 @@ class FieldMetrics:
 
         batch_data = self.feed_service.execute(POST(uri='batch').body(data_request_map), execute=True)
         for key, value in batch_data.items():
+            if value['statusCode'] != 200:
+                raise Exception(value['body'])
             aggregate_batch_data += value['body']['records']
 
         for record in aggregate_batch_data:
