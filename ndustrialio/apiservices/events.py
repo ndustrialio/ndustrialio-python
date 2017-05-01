@@ -131,7 +131,7 @@ class EventsService(Service):
     def createEvent(self, event_type_id, organization_id, name, facility_id=None, execute=True):
 
         assert isinstance(event_type_id, str)
-        assert isinstance(organization_id, int)
+        assert isinstance(organization_id, str)
         assert isinstance(name, str)
         if facility_id:
             assert isinstance(facility_id, int)
