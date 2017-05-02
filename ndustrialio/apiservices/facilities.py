@@ -3,7 +3,7 @@ from datetime import datetime
 from ndustrialio.apiservices import *
 
 
-class FacilityService(LegacySevice):
+class FacilityService(LegacyService):
 
     def __init__(self, access_token=None):
 
