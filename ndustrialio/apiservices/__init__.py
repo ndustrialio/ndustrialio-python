@@ -399,7 +399,7 @@ class Service(ApiService):
 
     def audience(self):
 
-        return 'base_audience'
+        raise Exception("Service must provide audience string by overriding audience function")
 
 class LegacyService(ApiService):
 
