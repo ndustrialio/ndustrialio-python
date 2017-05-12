@@ -1,10 +1,7 @@
-from datetime import timedelta, datetime
-from scipy import stats
-import time
+from datetime import timedelta
+from math import sqrt
 from ndustrialio.apiservices import *
 from ndustrialio.apiservices.feeds import FeedsService
-import pytz
-
 
 class FieldMetrics:
 
@@ -30,16 +27,12 @@ class FieldMetrics:
         if start_time_datetime > end_time_datetime:
             raise Exception('Start time must be less than end time')
 
-        time_array = []
-        value_array = []
-        aggregate_batch_data = []
         data_request_map = {}
         request_count = 0
-        MAX_BATCH_REQUESTS = 20
+        max_batch_requests = 20
 
-        num_bins, end_time_datetime = self.calculateNumberOfBinsAndEndTime(start_time_datetime, end_time_datetime, minute_interval)
-        start_time_utc = get_epoch_time(start_time_datetime)
-        end_time_utc = get_epoch_time(end_time_datetime)
+        bin_edges = self.getBinEdges(start_time_datetime, end_time_datetime, minute_interval)
+        bin_map = {time_tuple: [] for time_tuple in bin_edges}
 
         for field_identification in field_identification_list:
 
@@ -67,37 +60,47 @@ class FieldMetrics:
 
             request_count += 1
 
-            if request_count == MAX_BATCH_REQUESTS:
+            if request_count == max_batch_requests:
                 batch_data = self.feed_service.execute(POST(uri='batch').body(data_request_map), execute=True)
-                for key, value in batch_data.items():
-                    aggregate_batch_data += value['body']['records']
+                bin_map = self.addRecordsToBins(batch_data, bin_map, bin_edges)
                 request_count = 0
                 data_request_map = {}
 
-        batch_data = self.feed_service.execute(POST(uri='batch').body(data_request_map), execute=True)
-        for key, value in batch_data.items():
-            aggregate_batch_data += value['body']['records']
+        if data_request_map:
+            batch_data = self.feed_service.execute(POST(uri='batch').body(data_request_map), execute=True)
+            bin_map = self.addRecordsToBins(batch_data, bin_map, bin_edges)
 
-        for record in aggregate_batch_data:
+        bin_map = {edge_tuple: self.convertValuesToFloat(record_list) for edge_tuple, record_list in bin_map.items()}
 
-            timestamp_datetime = datetime.strptime(record['event_time'], "%Y-%m-%dT%H:%M:%S.%fZ")
-            timestamp_utc = get_epoch_time(timestamp_datetime.replace(tzinfo=pytz.utc))
-            try:
-                value_array.append(float(record['value']))
-                time_array.append(timestamp_utc)
-            except:
-                print ('Bad value: {}'.format(record['value']))
-
-        metrics_map = self.calculateMetrics(time_array, value_array, start_time_utc, end_time_utc, num_bins)
-
-        return metrics_map
-
+        return self.calculateMetrics(bin_map)
 
     '''
-        Iterate over the given start and end times to calculate the number of bins we'll need given the
-        desired minute interval
+        Convert the value of each record in a list into a float, or throw the record away if it is not valid
     '''
-    def calculateNumberOfBinsAndEndTime(self, start_time_datetime, end_time_datetime, minute_interval):
+    def convertValuesToFloat(self, record_list):
+
+        new_list = []
+
+        if record_list:
+            for record in record_list:
+                value = None
+
+                try:
+                    value = float(record['value'])
+                except KeyError:
+                    print ('Warning: Record: {} does not have value field'.format(record))
+                except ValueError:
+                    print ('Warning: Value: {} can not be converted to float type'.format(record['value']))
+
+                if value:
+                    new_list.append(value)
+
+        return new_list
+
+    '''
+        Iterate over the given start and end times to calculate the bin edges given the desired minute interval
+    '''
+    def getBinEdges(self, start_time_datetime, end_time_datetime, minute_interval):
 
         time_range_minutes = divmod((end_time_datetime - start_time_datetime).total_seconds(), 60)[0]
         interval_timedelta = timedelta(minutes=minute_interval)
@@ -105,58 +108,116 @@ class FieldMetrics:
         if minute_interval > time_range_minutes:
             raise Exception('Time interval should not be larger than the time range')
 
-        num_bins = 0
-        new_end_time_datetime = start_time_datetime
+        # Array of (start_time, end_time) datetime tuples labeling the edges of each bin
+        # For each value x in a given bin with (start_time, end_time), start_time <= x < end_time
+
+        bin_edges = []
+        current_start_time_datetime = start_time_datetime
 
         while True:
-            if (new_end_time_datetime + interval_timedelta) > end_time_datetime:
+            if (current_start_time_datetime + interval_timedelta) > end_time_datetime:
+                bin_edges.append(tuple([current_start_time_datetime, end_time_datetime]))
                 break
             else:
-                new_end_time_datetime += interval_timedelta
-                num_bins += 1
+                bin_edges.append(tuple([current_start_time_datetime, current_start_time_datetime + interval_timedelta]))
+                current_start_time_datetime += interval_timedelta
 
-        return num_bins, new_end_time_datetime
+        return bin_edges
 
     '''
-        Populate the final format of the bucket, which is a hashmap of datetime (UTC) -> value
+        Add the response of a batch request for raw data to the bin map
     '''
-    def populateFinalBucket(self, metric_tuple):
-        bucket = {}
-        for idx, edge in enumerate(metric_tuple[1][1:]):
-            bucket[datetime.utcfromtimestamp(edge).replace(tzinfo=pytz.utc)] = metric_tuple[0][idx]
-        return bucket
+    def addRecordsToBins(self, batch_data, bin_map, bin_edges):
+
+        for key, value in batch_data.items():
+
+            records = value['body']['records']
+            reversed_records = reversed(records)
+            bin_edges_index = 0
+            current_time_tuple = bin_edges[bin_edges_index]
+            current_end_time = current_time_tuple[1]
+            current_list = bin_map[current_time_tuple]
+
+            for record in reversed_records:
+                event_time_datetime = datetime.strptime(record['event_time'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                if event_time_datetime >= current_end_time:
+                    bin_map[current_time_tuple] = current_list
+                    bin_edges_index += 1
+                    current_time_tuple = bin_edges[bin_edges_index]
+                    current_end_time = current_time_tuple[1]
+                    current_list = bin_map[current_time_tuple]
+                current_list.append(record)
+
+            bin_map[current_time_tuple] = current_list
+
+        return bin_map
 
     '''
         Calculate the metrics we're trying to grab
     '''
-    def calculateMetrics(self, time_array, value_array, start_time_utc, end_time_utc, num_bins):
+    def calculateMetrics(self, bin_map):
 
-        mean_metric_tuple = stats.binned_statistic(x=time_array,
-                                                   values=value_array,
-                                                   statistic='mean',
-                                                   bins=num_bins,
-                                                   range=[(start_time_utc, end_time_utc)])
+        return {edge_tuple: {
+                    'minimum': self.calculate_minimum(value_list),
+                    'maximum': self.calculate_maximum(value_list),
+                    'mean': self.calculate_mean(value_list),
+                    'standard_deviation': self.calculate_stdev(value_list)
+                    }
+                for edge_tuple, value_list in bin_map.items()
+        }
 
-        min_metric_tuple = stats.binned_statistic(x=time_array,
-                                                  values=value_array,
-                                                  statistic='min',
-                                                  bins=num_bins,
-                                                  range=[(start_time_utc, end_time_utc)])
+    def calculate_minimum(self, list):
 
-        max_metric_tuple = stats.binned_statistic(x=time_array,
-                                                  values=value_array,
-                                                  statistic='max',
-                                                  bins=num_bins,
-                                                  range=[(start_time_utc, end_time_utc)])
+        minimum = None
 
-        std_metric_tuple = stats.binned_statistic(x=time_array,
-                                                  values=value_array,
-                                                  statistic='std',
-                                                  bins=num_bins,
-                                                  range=[(start_time_utc, end_time_utc)])
+        try:
+            minimum = min(list)
+        except:
+            print("Could not find minimum of list: {}".format(list))
 
-        return {'mean': self.populateFinalBucket(mean_metric_tuple),
-               'minimum': self.populateFinalBucket(min_metric_tuple),
-               'maximum': self.populateFinalBucket(max_metric_tuple),
-               'standard_deviation': self.populateFinalBucket(std_metric_tuple)
-               }
+        return minimum
+
+    def calculate_maximum(self, list):
+
+        maximum = None
+
+        try:
+            maximum = max(list)
+        except:
+            print("Could not find maximum of list: {}".format(list))
+
+        return maximum
+
+    def calculate_mean(self, list):
+
+        mean = None
+
+        try:
+            mean = sum(list)/len(list)
+        except:
+            print("Could not find mean of list: {}".format(list))
+
+        return mean
+
+    def calculate_stdev(self, list):
+
+        stdev = None
+
+        try:
+            stdev = self.standard_deviation(list)
+        except:
+            print("Could not find standard deviation of list: {}".format(list))
+
+        return stdev
+
+    def standard_deviation(self, list):
+
+        num_items = len(list)
+        mean = sum(list) / num_items
+        differences = [x - mean for x in list]
+        sq_differences = [d ** 2 for d in differences]
+        ssd = sum(sq_differences)
+        variance = ssd / (num_items - 1)
+        sd = sqrt(variance)
+
+        return sd
