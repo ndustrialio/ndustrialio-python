@@ -75,30 +75,9 @@ class FieldMetrics:
         return self.calculateMetrics(bin_map)
 
     '''
-        Convert the value of each record in a list into a float, or throw the record away if it is not valid
-    '''
-    def convertValuesToFloat(self, record_list):
-
-        new_list = []
-
-        if record_list:
-            for record in record_list:
-                value = None
-
-                try:
-                    value = float(record['value'])
-                except KeyError:
-                    print ('Warning: Record: {} does not have value field'.format(record))
-                except ValueError:
-                    print ('Warning: Value: {} can not be converted to float type'.format(record['value']))
-
-                if value:
-                    new_list.append(value)
-
-        return new_list
-
-    '''
-        Iterate over the given start and end times to calculate the bin edges given the desired minute interval
+        Iterate over the given start and end times to calculate the bin edges given the desired minute interval.
+        If the full time range is not a multiple of the time interval, the final bin's end time will equal the end
+        time of the time range, and the final bin may be smaller than the time interval.
     '''
     def getBinEdges(self, start_time_datetime, end_time_datetime, minute_interval):
 
@@ -125,7 +104,8 @@ class FieldMetrics:
         return bin_edges
 
     '''
-        Add the response of a batch request for raw data to the bin map
+        Add the response of a batch request for raw data to the bin map.
+        For a bin with edges (start, end), all values x in the bin must be start <= x < end
     '''
     def addRecordsToBins(self, batch_data, bin_map, bin_edges):
 
@@ -140,20 +120,60 @@ class FieldMetrics:
 
             for record in reversed_records:
                 event_time_datetime = datetime.strptime(record['event_time'], "%Y-%m-%dT%H:%M:%S.%fZ")
+
                 if event_time_datetime >= current_end_time:
-                    bin_map[current_time_tuple] = current_list
                     bin_edges_index += 1
-                    current_time_tuple = bin_edges[bin_edges_index]
-                    current_end_time = current_time_tuple[1]
-                    current_list = bin_map[current_time_tuple]
-                current_list.append(record)
+                    if bin_edges_index == len(bin_edges):
+                        current_list.append(record)
+                        bin_map[current_time_tuple] = current_list
+                        break
+                    else:
+                        bin_map[current_time_tuple] = current_list
+                        current_time_tuple = bin_edges[bin_edges_index]
+                        current_end_time = current_time_tuple[1]
+                        current_list = bin_map[current_time_tuple]
+                        current_list.append(record)
+                else:
+                    current_list.append(record)
 
             bin_map[current_time_tuple] = current_list
 
         return bin_map
 
     '''
-        Calculate the metrics we're trying to grab
+        Convert the value of each record in a list into a float, or throw the record away if it is not valid
+    '''
+    def convertValuesToFloat(self, record_list):
+
+        new_list = []
+
+        if record_list:
+            for record in record_list:
+                value = None
+
+                try:
+                    value = float(record['value'])
+                except KeyError:
+                    print ('Warning: Record: {} does not have value field'.format(record))
+                except ValueError:
+                    print ('Warning: Value: {} can not be converted to float type'.format(record['value']))
+
+                if value:
+                    new_list.append(value)
+
+        return new_list
+
+    '''
+        Calculate the metrics we're trying to grab.
+        Return result in format {(start_datetime_0, end_datetime_0):
+                                    {'minimum: min_value,
+                                     'maximum: max_value,
+                                     'mean': mean_value,
+                                     'standard_deviation': standard_deviation_value
+                                     }
+                                 (start_datetime_1, end_datetime_1):
+                                    ...
+                                }
     '''
     def calculateMetrics(self, bin_map):
 
