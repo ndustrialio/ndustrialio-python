@@ -111,7 +111,7 @@ class FieldMetrics:
 
         for key, value in batch_data.items():
 
-            records = value['body']['records']
+            records = value['body']['records'] # Value list is sorted in descending order of event time
             reversed_records = reversed(records)
             bin_edges_index = 0
             current_time_tuple = bin_edges[bin_edges_index]
@@ -123,11 +123,11 @@ class FieldMetrics:
 
                 if event_time_datetime >= current_end_time:
                     bin_edges_index += 1
-                    if bin_edges_index == len(bin_edges):
+                    if bin_edges_index == len(bin_edges): # Must be last record, add to current list and commit current list
                         current_list.append(record)
                         bin_map[current_time_tuple] = current_list
                         break
-                    else:
+                    else: # Record belongs in next bin
                         bin_map[current_time_tuple] = current_list
                         current_time_tuple = bin_edges[bin_edges_index]
                         current_end_time = current_time_tuple[1]
@@ -136,7 +136,7 @@ class FieldMetrics:
                 else:
                     current_list.append(record)
 
-            bin_map[current_time_tuple] = current_list
+            bin_map[current_time_tuple] = current_list # Commit the last incremental list
 
         return bin_map
 
