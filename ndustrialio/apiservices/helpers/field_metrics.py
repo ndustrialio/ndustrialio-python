@@ -4,6 +4,8 @@ from datetime import timedelta
 from math import sqrt
 from collections import OrderedDict
 
+from time import time
+
 class FieldMetrics:
 
     def __init__(self, client_id, client_secret):
@@ -24,6 +26,8 @@ class FieldMetrics:
 
     '''
     def getBatchFieldDataMetrics(self, start_time_datetime, end_time_datetime, minute_interval, field_identification_list):
+
+        print("start: {}".format(time()))
 
         time_range_minutes = divmod((end_time_datetime - start_time_datetime).total_seconds(), 60)[0]
 
@@ -194,6 +198,9 @@ class FieldMetrics:
                                     'mean': self.calculate_mean(value_list),
                                     'standard_deviation': self.calculate_stdev(value_list)
                                     }
+
+        print("end: {}".format(time()))
+        return bin_map
 
     def calculate_minimum(self, list):
 
