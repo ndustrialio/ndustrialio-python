@@ -1,7 +1,8 @@
-from datetime import timedelta
-from math import sqrt
 from ndustrialio.apiservices import *
 from ndustrialio.apiservices.feeds import FeedsService
+from datetime import timedelta
+from math import sqrt
+from collections import OrderedDict
 
 class FieldMetrics:
 
@@ -32,7 +33,10 @@ class FieldMetrics:
         max_batch_requests = 20
 
         bin_edges = self.getBinEdges(start_time_datetime, end_time_datetime, minute_interval)
-        bin_map = {time_tuple: [] for time_tuple in bin_edges}
+        bin_map = OrderedDict()
+
+        for time_tuple in bin_edges:
+            bin_map[time_tuple] = []
 
         for field_identification in field_identification_list:
 
@@ -66,11 +70,13 @@ class FieldMetrics:
                 request_count = 0
                 data_request_map = {}
 
+        # Case in which number of fields is not multiple of max_batch_requests
         if data_request_map:
             batch_data = self.feed_service.execute(POST(uri='batch').body(data_request_map), execute=True)
             bin_map = self.addRecordsToBins(batch_data, bin_map, bin_edges)
 
-        bin_map = {edge_tuple: self.convertValuesToFloat(record_list) for edge_tuple, record_list in bin_map.items()}
+        for edge_tuple, record_list in bin_map.items():
+            bin_map[edge_tuple] = self.convertValuesToFloat(record_list)
 
         return self.calculateMetrics(bin_map)
 
@@ -87,9 +93,10 @@ class FieldMetrics:
         if minute_interval > time_range_minutes:
             raise Exception('Time interval should not be larger than the time range')
 
-        # Array of (start_time, end_time) datetime tuples labeling the edges of each bin
-        # For each value x in a given bin with (start_time, end_time), start_time <= x < end_time
+        if time_range_minutes > 6000:
+            raise Exception('Time range should not be larger than 100 hours')
 
+        # List of (start_time, end_time) datetime tuples labeling the edges of each bin
         bin_edges = []
         current_start_time_datetime = start_time_datetime
 
@@ -105,7 +112,8 @@ class FieldMetrics:
 
     '''
         Add the response of a batch request for raw data to the bin map.
-        For a bin with edges (start, end), all values x in the bin must be start <= x < end
+        For a bin with edges (start, end), all values x in the bin must be start <= x < end, except for the last bin,
+        where start <= x <= end.
     '''
     def addRecordsToBins(self, batch_data, bin_map, bin_edges):
 
@@ -174,17 +182,17 @@ class FieldMetrics:
                                  (start_datetime_1, end_datetime_1):
                                     ...
                                 }
+        Dict keys are ordered chronologically
     '''
     def calculateMetrics(self, bin_map):
 
-        return {edge_tuple: {
-                    'minimum': self.calculate_minimum(value_list),
-                    'maximum': self.calculate_maximum(value_list),
-                    'mean': self.calculate_mean(value_list),
-                    'standard_deviation': self.calculate_stdev(value_list)
-                    }
-                for edge_tuple, value_list in bin_map.items()
-        }
+        for edge_tuple, value_list in bin_map.items():
+            bin_map[edge_tuple] = {
+                                    'minimum': self.calculate_minimum(value_list),
+                                    'maximum': self.calculate_maximum(value_list),
+                                    'mean': self.calculate_mean(value_list),
+                                    'standard_deviation': self.calculate_stdev(value_list)
+                                    }
 
     def calculate_minimum(self, list):
 
