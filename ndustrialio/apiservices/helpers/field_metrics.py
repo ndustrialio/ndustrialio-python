@@ -25,8 +25,16 @@ class FieldMetrics:
     '''
     def getBatchFieldDataMetrics(self, start_time_datetime, end_time_datetime, minute_interval, field_identification_list):
 
+        time_range_minutes = divmod((end_time_datetime - start_time_datetime).total_seconds(), 60)[0]
+
         if start_time_datetime > end_time_datetime:
             raise Exception('Start time must be less than end time')
+
+        if minute_interval > time_range_minutes:
+            raise Exception('Time interval should not be larger than the time range')
+
+        if time_range_minutes > 6000:
+            raise Exception('Time range should not be larger than 100 hours')
 
         data_request_map = {}
         request_count = 0
@@ -87,14 +95,7 @@ class FieldMetrics:
     '''
     def getBinEdges(self, start_time_datetime, end_time_datetime, minute_interval):
 
-        time_range_minutes = divmod((end_time_datetime - start_time_datetime).total_seconds(), 60)[0]
         interval_timedelta = timedelta(minutes=minute_interval)
-
-        if minute_interval > time_range_minutes:
-            raise Exception('Time interval should not be larger than the time range')
-
-        if time_range_minutes > 6000:
-            raise Exception('Time range should not be larger than 100 hours')
 
         # List of (start_time, end_time) datetime tuples labeling the edges of each bin
         bin_edges = []
