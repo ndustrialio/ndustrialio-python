@@ -1,0 +1,97 @@
+# This references the default Python container from
+# the Docker Hub with the 2.7 tag:
+# https://registry.hub.docker.com/_/python/
+# If you want to use a slim Python container with
+# version 3.4.3 you would use: python:3.4-slim
+# If you want Google's container you would reference google/python
+# Read more about containers on our dev center
+# http://devcenter.wercker.com/docs/containers/index.html
+box: python:2.7
+# You can also use services such as databases. Read more on our dev center:
+# http://devcenter.wercker.com/docs/services/index.html
+# services:
+    # - postgres
+    # http://devcenter.wercker.com/docs/services/postgresql.html
+
+    # - mongo
+    # http://devcenter.wercker.com/docs/services/mongodb.html
+
+# This is the build pipeline. Pipelines are the core of wercker
+# Read more about pipelines on our dev center
+# http://devcenter.wercker.com/docs/pipelines/index.html
+build:
+  # The steps that will be executed on build
+  # Steps make up the actions in your pipeline
+  # Read more about steps on our dev center:
+  # http://devcenter.wercker.com/docs/steps/index.html
+  steps:
+    # A step that sets up the python virtual environment
+    - virtualenv:
+        name: setup virtual environment
+        install_wheel: false # Enable wheel to speed up builds (experimental)
+
+    # # Use this virtualenv step for python 3.2
+    # - virtualenv
+    #     name: setup virtual environment
+    #     python_location: /usr/bin/python3.2
+
+    # A step that executes `pip install` command.
+    # - pip-install
+
+    # Install package and dependencies
+    - script:
+        name: install package
+        code: |
+          python setup.py install
+
+    # # This pip-install clears the local wheel cache
+    # - pip-install:
+    #     clean_wheel_dir: true
+
+    # A custom script step, name value is used in the UI
+    # and the code value contains the command that get executed
+    - script:
+        name: echo python information
+        code: |
+          echo "python version $(python --version) running"
+          echo "pip version $(pip --version) running"
+    - script:
+        name: copy files to $WERCKER_OUTPUT_DIR
+        code: ./scripts/copy_files_to_wercker_output_dir.sh
+
+test:
+    steps:
+
+        - script:
+            name: install package
+            code: |
+                python setup.py install
+
+        - script:
+            name: Run tests
+            code: |
+                python test_runner.py
+
+        - script:
+            name: Check code coverage
+            code: |
+                coverage run --include ./ndustrialio/apiservices/__init__.py test_runner.py
+                if [ -z ${MIN_CODE_COVERAGE+x} ]; then
+                    echo "env variable MIN_CODE_COVERAGE is not set - pipeline will pass regardless of coverage percent"
+                    coverage report
+                else
+                    coverage report --fail-under=$MIN_CODE_COVERAGE
+                fi
+
+        - script:
+            name: Upload coverage results
+            code:
+                codecov --token=$CODECOV_TOKEN --commit=$WERCKER_GIT_COMMIT
+
+status-wait:
+    steps:
+
+        - maestrohealthcaretechnologies/wait-github-statuses:
+            status_contexts: wercker/test
+            timeout: 10
+            github_token: $GITHUB_STATUS_TOKEN
