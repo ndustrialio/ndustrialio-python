@@ -13,7 +13,8 @@ setup(name='ndustrialio-python',
         'tzlocal',
         'requests',
         'scipy',
-        'numpy'
+        'numpy',
+        'unittest'
       ],
       dependency_links=[
         'git+https://git@github.com/ndustrialio/auth0-python.git'

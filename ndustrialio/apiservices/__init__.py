@@ -52,7 +52,7 @@ class ApiClient(object):
             if api_request.method() == 'GET':
                 response=requests.get(url=str(api_request), headers=headers)
             if api_request.method() == 'POST':
-                if api_request.content_type == ApiRequest.URLENCODED_CONTENT_TYPE:
+                if api_request.content_type() == ApiRequest.URLENCODED_CONTENT_TYPE:
                     response = requests.post(url=str(api_request), data=api_request.body(), headers=headers)
                 else:
                     response = requests.post(url=str(api_request), json=api_request.body(), headers=headers)
@@ -116,7 +116,7 @@ class PagedResponse(object):
 class DataResponse(object):
 
     def __init__(self, data, client):
-        self.client = client;
+        self.client = client
         self.count = data['meta']['count']
         self.has_more = data['meta']['has_more']
 
