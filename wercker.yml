@@ -55,9 +55,9 @@ build:
         code: |
           echo "python version $(python --version) running"
           echo "pip version $(pip --version) running"
-    - script:
-        name: copy files to $WERCKER_OUTPUT_DIR
-        code: ./scripts/copy_files_to_wercker_output_dir.sh
+    # - script:
+    #     name: copy files to $WERCKER_OUTPUT_DIR
+    #    code: ./scripts/copy_files_to_wercker_output_dir.sh
 
 test:
     steps:
