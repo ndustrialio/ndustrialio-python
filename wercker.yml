@@ -66,6 +66,7 @@ test:
             name: install package
             code: |
                 python setup.py install
+                pip install git+https://git@github.com/ndustrialio/auth0-python
 
         - script:
             name: Run tests
