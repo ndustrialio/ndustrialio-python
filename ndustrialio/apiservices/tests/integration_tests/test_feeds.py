@@ -40,28 +40,28 @@ class TestFeeds(unittest.TestCase):
 
     @patch.object(FeedsService, 'baseURL')
     def test_get_feed(self, mock_baseURL):
-        mock_baseURL.return_value = 'http://localhost:3000'
+        mock_baseURL.return_value = 'http://0.0.0.0:3000'
         self.initializeTestData('./fixtures/setup_get_feeds.sql')
         feed = self.feeds_service.getFeeds(id=4)
         self.assertEqual(feed, 'test')
 
     @patch.object(FeedsService, 'baseURL')
     def test_get_feeds(self, mock_baseURL):
-        mock_baseURL.return_value = 'http://localhost:3000'
+        mock_baseURL.return_value = 'http://0.0.0.0:3000'
         self.initializeTestData('./fixtures/setup_get_feeds.sql')
         feeds = self.feeds_service.getFeeds()
         self.assertEqual(len(feeds), 7)
 
     @patch.object(FeedsService, 'baseURL')
     def test_get_feed_by_key(self, mock_baseURL):
-        mock_baseURL.return_value = 'http://localhost:3000'
+        mock_baseURL.return_value = 'http://0.0.0.0:3000'
         self.initializeTestData('./fixtures/setup_get_feeds.sql')
         feed = self.feeds_service.getFeedByKey(key='key_3')
         self.assertEqual(feed, 'test')
 
     @patch.object(FeedsService, 'baseURL')
     def test_create_feed(self, mock_baseURL):
-        mock_baseURL.return_value = 'http://localhost:3000'
+        mock_baseURL.return_value = 'http://0.0.0.0:3000'
         self.initializeTestData('./fixtures/setup_create_feed.sql')
         response = self.feeds_service.createFeed(key='test_key',
                                                  timezone='UTC',
