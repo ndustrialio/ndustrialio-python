@@ -31,6 +31,12 @@ class TestFeeds(unittest.TestCase):
         with open(file_path, 'r') as f:
             return f.read()
 
+    def executeQuery(self, query, args=None):
+        with self.db_con.cursor() as cur:
+            cur.execute(query)
+            rows = cur.fetchall()
+        return rows
+
     def test_get_feed(self):
         self.initializeTestData('./fixtures/setup_get_feeds.sql')
         feed = self.feeds_service.getFeeds(id=4)
@@ -40,3 +46,17 @@ class TestFeeds(unittest.TestCase):
         self.initializeTestData('./fixtures/setup_get_feeds.sql')
         feeds = self.feeds_service.getFeeds()
         self.assertEqual(len(feeds), 7)
+
+    def test_get_feed_by_key(self):
+        self.initializeTestData('./fixtures/setup_get_feeds.sql')
+        feed = self.feeds_service.getFeedByKey(key='key_3')
+        self.assertEqual(feed, 'test')
+
+    def test_create_feed(self):
+        self.initializeTestData('./fixtures/setup_create_feed.sql')
+        response = self.feeds_service.createFeed(key='test_key',
+                                                 timezone='UTC',
+                                                 type='test_type',
+                                                 facility_id=100)
+        feed = self.executeQuery('SELECT * from feeds')
+        self.assertEqual(feed, 'test')
