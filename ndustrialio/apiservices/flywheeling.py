@@ -61,5 +61,42 @@ class FlywheelingService(Service):
     def getSystemSetpointData(self, system_id, execute=True):
         assert isinstance(system_id, str)
         return self.execute(GET(uri='systems/{}/schemes/data'.format(system_id)), execute)
+
+    ## Zone runes
+    def getRunsForZone(self, zone_id, orderBy=None, reverseOrder=False, execute=True):
+        assert isinstance(zone_id, str)
+        params = {}
+        if orderBy:
+            assert isinstance(orderBy, str)
+            params['orderBy'] = orderBy
+        if reverseOrder:
+            assert isinstance(reverseOrder, bool)
+        params['reverseOrder'] = reverseOrder
+        return PagedResponse(self.execute(GET(uri='zones/{}/runs'.format(zone_id)).params(params), execute))
+
+    def getLatestRunForZone(self, zone_id):
+        params = {'latest': True}
+        result = self.execute(GET(uri='zones/{}/runs'.format(zone_id)).params(params), True)
+        if (result["records"]) > 0:
+            return result["records"][0]
+        else:
+            return None
+
+    ## Run output
+    def getOutputDataForRun(self, run_id, execute=True):
+        assert isinstance(run_id, int)
+        return self.execute(GET(uri='runs/{}/output'.format(run_id)), execute)
+
+    def addOutputForRun(self, run_id, data_obj):
+        assert isinstance(run_id, int)
+        if not (isinstance(data_obj, dict) or isinstance(data_obj, list)):
+            raise AssertionError("Must pass in a dictionary or list to be formatted into json")
+
+        dataDict = {"data": data_obj}
+        return self.execute(POST(uri='runs/{}/output'.format(run_id)).body(dataDict))
+
+    def removeOutputForRun(self, run_id, execute=True):
+        assert isinstance(run_id, int)
+        return self.execute(DELETE(uri='runs/{}/output'.format(run_id)), execute)
     
     
