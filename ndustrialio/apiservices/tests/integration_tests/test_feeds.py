@@ -1,7 +1,6 @@
 import unittest
 import os
 import psycopg2
-from mock import patch
 from ndustrialio.apiservices.feeds import FeedsService
 
 class TestFeeds(unittest.TestCase):
@@ -24,8 +23,6 @@ class TestFeeds(unittest.TestCase):
     def initializeTestData(self, psql_setup_file=None):
         if psql_setup_file:
             with self.db_con.cursor() as cur:
-                cur.execute('DROP DATABASE IF EXISTS {}'.format(os.environ.get('POSTGRES_DB')))
-                cur.execute('CREATE DATABASE {}'.format(os.environ.get('POSTGRES_DB')))
                 cur.execute(self.fileRead(psql_setup_file))
 
     def fileRead(self, path):
@@ -34,5 +31,12 @@ class TestFeeds(unittest.TestCase):
         with open(file_path, 'r') as f:
             return f.read()
 
+    def test_get_feed(self):
+        self.initializeTestData('./fixtures/setup_get_feeds.sql')
+        feed = self.feeds_service.getFeeds(id=4)
+        self.assertEqual(feed, 'test')
+
     def test_get_feeds(self):
         self.initializeTestData('./fixtures/setup_get_feeds.sql')
+        feeds = self.feeds_service.getFeeds()
+        self.assertEqual(len(feeds), 7)
