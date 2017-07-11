@@ -1,4 +1,4 @@
-from ndustrialio.apiservices.tests.test_cases.test_api_client import TestAPIClient
+from ndustrialio.apiservices.tests.unit_tests.test_api_client import TestAPIClient
 from ndustrialio.workertools.test_runner import TestRunner
 
 if __name__ == '__main__':
