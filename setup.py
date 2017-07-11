@@ -15,6 +15,7 @@ setup(name='ndustrialio-python',
         'mock==1.0.1',
         'coverage',
         'codecov',
+        'psycopg2'
       ],
       dependency_links=[
         'git+https://git@github.com/ndustrialio/auth0-python'
