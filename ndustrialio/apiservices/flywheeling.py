@@ -77,7 +77,7 @@ class FlywheelingService(Service):
     def getLatestRunForZone(self, zone_id):
         params = {'latest': True}
         result = self.execute(GET(uri='zones/{}/runs'.format(zone_id)).params(params), True)
-        if (result["records"]) > 0:
+        if len(result["records"]) > 0:
             return result["records"][0]
         else:
             return None
