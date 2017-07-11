@@ -12,9 +12,9 @@ setup(name='ndustrialio-python',
         'pytz',
         'tzlocal',
         'requests',
-        'mock',
+        'mock==1.0.1',
         'coverage',
-        'codecov'
+        'codecov',
       ],
       dependency_links=[
         'git+https://git@github.com/ndustrialio/auth0-python'
