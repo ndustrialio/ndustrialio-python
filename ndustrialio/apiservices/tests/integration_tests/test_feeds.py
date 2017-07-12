@@ -3,6 +3,7 @@ import os
 import psycopg2
 from mock import patch
 from ndustrialio.apiservices.feeds import FeedsService
+import socket
 
 class TestFeeds(unittest.TestCase):
 
@@ -12,6 +13,7 @@ class TestFeeds(unittest.TestCase):
         self.client_secret = os.environ.get('CLIENT_SECRET')
         self.feeds_service = FeedsService(self.client_id, self.client_secret)
         self.db_con = self.initializeTestDatabase()
+        self.host = socket.gethostname()
 
     def initializeTestDatabase(self):
         db_con = psycopg2.connect(database=os.environ.get('POSTGRES_DB'),
@@ -40,28 +42,28 @@ class TestFeeds(unittest.TestCase):
 
     @patch.object(FeedsService, 'baseURL')
     def test_get_feed(self, mock_baseURL):
-        mock_baseURL.return_value = 'http://0.0.0.0:3000'
+        mock_baseURL.return_value = 'http://{}:3000'.format(self.host)
         self.initializeTestData('./fixtures/setup_get_feeds.sql')
         feed = self.feeds_service.getFeeds(id=4)
         self.assertEqual(feed, 'test')
 
     @patch.object(FeedsService, 'baseURL')
     def test_get_feeds(self, mock_baseURL):
-        mock_baseURL.return_value = 'http://0.0.0.0:3000'
+        mock_baseURL.return_value = 'http://{}:3000'.format(self.host)
         self.initializeTestData('./fixtures/setup_get_feeds.sql')
         feeds = self.feeds_service.getFeeds()
         self.assertEqual(len(feeds), 7)
 
     @patch.object(FeedsService, 'baseURL')
     def test_get_feed_by_key(self, mock_baseURL):
-        mock_baseURL.return_value = 'http://0.0.0.0:3000'
+        mock_baseURL.return_value = 'http://{}:3000'.format(self.host)
         self.initializeTestData('./fixtures/setup_get_feeds.sql')
         feed = self.feeds_service.getFeedByKey(key='key_3')
         self.assertEqual(feed, 'test')
 
     @patch.object(FeedsService, 'baseURL')
     def test_create_feed(self, mock_baseURL):
-        mock_baseURL.return_value = 'http://0.0.0.0:3000'
+        mock_baseURL.return_value = 'http://{}:3000'.format(self.host)
         self.initializeTestData('./fixtures/setup_create_feed.sql')
         response = self.feeds_service.createFeed(key='test_key',
                                                  timezone='UTC',
