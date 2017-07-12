@@ -40,7 +40,7 @@ class TestFeeds(unittest.TestCase):
 
     @patch.object(FeedsService, 'baseURL')
     def test_get_feed(self, mock_baseURL):
-        mock_baseURL.return_value = 'http://127.0.0.1:3000'.format(self.host)
+        mock_baseURL.return_value = 'http://127.0.0.1:3000'
         self.initializeTestData('./fixtures/setup_get_feeds.sql')
         feed = self.feeds_service.getFeeds(id=4)
         self.assertEqual(feed, 'test')
