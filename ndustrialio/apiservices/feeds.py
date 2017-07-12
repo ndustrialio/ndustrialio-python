@@ -12,8 +12,7 @@ class FeedsService(Service):
 
     def audience(self):
 
-        return 'etqjN7sj7rky3nQGSJD77HF0f0iQTnTY'
-        # return 'iznTb30Sfp2Jpaf398I5DN6MyPuDCftA'
+        return 'iznTb30Sfp2Jpaf398I5DN6MyPuDCftA'
 
     def getFeeds(self, id=None, execute=True):
 
