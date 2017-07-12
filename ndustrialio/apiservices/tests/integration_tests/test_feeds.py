@@ -38,16 +38,12 @@ class TestFeeds(unittest.TestCase):
             rows = cur.fetchall()
         return rows
 
-    @patch.object(FeedsService, 'baseURL')
-    def test_get_feed(self, mock_baseURL):
-        mock_baseURL.return_value = 'http://127.0.0.1:3000'
+    def test_get_feed(self):
         self.initializeTestData('./fixtures/setup_get_feeds.sql')
         feed = self.feeds_service.getFeeds(id=4)
         self.assertEqual(feed, 'test')
 
-    @patch.object(FeedsService, 'baseURL')
-    def test_get_feeds(self, mock_baseURL):
-        mock_baseURL.return_value = 'http://127.0.0.1:3000'
+    def test_get_feeds(self):
         self.initializeTestData('./fixtures/setup_get_feeds.sql')
         feeds = self.feeds_service.getFeeds()
         self.assertEqual(len(feeds), 7)
