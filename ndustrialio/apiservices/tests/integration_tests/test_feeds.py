@@ -57,7 +57,7 @@ class TestFeeds(unittest.TestCase):
 
     @patch.object(FeedsService, 'baseURL')
     def test_create_feed(self, mock_baseURL):
-        mock_baseURL.return_value = 'http://127.0.0.1:3000'
+        mock_baseURL.return_value = 'http://docker:3000'
         self.initializeTestData('./fixtures/setup_create_feed.sql')
         response = self.feeds_service.createFeed(key='test_key',
                                                  timezone='UTC',
