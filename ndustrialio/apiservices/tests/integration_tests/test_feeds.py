@@ -48,16 +48,12 @@ class TestFeeds(unittest.TestCase):
         feeds = self.feeds_service.getFeeds()
         self.assertEqual(len(feeds), 7)
 
-    @patch.object(FeedsService, 'baseURL')
-    def test_get_feed_by_key(self, mock_baseURL):
-        mock_baseURL.return_value = 'http://127.0.0.1:3000'
+    def test_get_feed_by_key(self):
         self.initializeTestData('./fixtures/setup_get_feeds.sql')
         feed = self.feeds_service.getFeedByKey(key='key_3')
         self.assertEqual(feed, 'test')
 
-    @patch.object(FeedsService, 'baseURL')
-    def test_create_feed(self, mock_baseURL):
-        mock_baseURL.return_value = 'http://docker:3000'
+    def test_create_feed(self):
         self.initializeTestData('./fixtures/setup_create_feed.sql')
         response = self.feeds_service.createFeed(key='test_key',
                                                  timezone='UTC',
