@@ -17,7 +17,6 @@ class TestAPIClient(unittest.TestCase):
         super(TestAPIClient, self).__init__(*args, **kwargs)
         self.api_client = ApiClient('fake_access_token')
 
-
     def get_test_request(self, method, uri='test/uri', base_url='http://base_url.com', params=None, version=None, body=None, content_type=None):
         request = ApiRequest(uri)
         request.base_url(base_url)
