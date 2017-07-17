@@ -6,15 +6,13 @@ from ndustrialio.apiservices.feeds import FeedsService
 
 class TestFeeds(unittest.TestCase):
 
-    @patch.object(FeedsService, 'audience')
-    def __init__(self, mock_audience, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(TestFeeds, self).__init__(*args, **kwargs)
-        mock_audience.return_value = os.environ.get('AUDIENCE')
         self.client_id = os.environ.get('CLIENT_ID')
         self.client_secret = os.environ.get('CLIENT_SECRET')
-        self.feeds_service = FeedsService(self.client_id, self.client_secret)
         self.db_con = self.initializeTestDatabase()
         self.api_service_host = os.environ.get('REALTIME_API_SERVICE_HOST')
+        self.audience = os.environ.get('AUDIENCE')
 
     def initializeTestDatabase(self):
         db_con = psycopg2.connect(database=os.environ.get('POSTGRES_DB'),
@@ -42,31 +40,43 @@ class TestFeeds(unittest.TestCase):
         return rows
 
     @patch.object(FeedsService, 'baseURL')
-    def test_get_feed(self, mock_baseURL):
+    @patch.object(FeedsService, 'audience')
+    def test_get_feed(self, mock_audience, mock_baseURL):
+        mock_audience.return_value = self.audience
         mock_baseURL.return_value = 'http://{}:3000'.format(self.api_service_host)
+        feeds_service = FeedsService(self.client_id, self.client_secret)
         self.initializeTestData('./fixtures/setup_get_feeds.sql')
-        feed = self.feeds_service.getFeeds(id=4)
+        feed = feeds_service.getFeeds(id=4)
         self.assertEqual(feed, 'test')
 
     @patch.object(FeedsService, 'baseURL')
-    def test_get_feeds(self, mock_baseURL):
+    @patch.object(FeedsService, 'audience')
+    def test_get_feeds(self, mock_audience, mock_baseURL):
+        mock_audience.return_value = self.audience
         mock_baseURL.return_value = 'http://{}:3000'.format(self.api_service_host)
+        feeds_service = FeedsService(self.client_id, self.client_secret)
         self.initializeTestData('./fixtures/setup_get_feeds.sql')
-        feeds = self.feeds_service.getFeeds()
+        feeds = feeds_service.getFeeds()
         self.assertEqual(len(feeds), 7)
 
     @patch.object(FeedsService, 'baseURL')
-    def test_get_feed_by_key(self, mock_baseURL):
+    @patch.object(FeedsService, 'audience')
+    def test_get_feed_by_key(self, mock_audience, mock_baseURL):
+        mock_audience.return_value = self.audience
         mock_baseURL.return_value = 'http://{}:3000'.format(self.api_service_host)
+        feeds_service = FeedsService(self.client_id, self.client_secret)
         self.initializeTestData('./fixtures/setup_get_feeds.sql')
-        feed = self.feeds_service.getFeedByKey(key='key_3')
+        feed = feeds_service.getFeedByKey(key='key_3')
         self.assertEqual(feed, 'test')
 
     @patch.object(FeedsService, 'baseURL')
-    def test_create_feed(self, mock_baseURL):
+    @patch.object(FeedsService, 'audience')
+    def test_create_feed(self, mock_audience, mock_baseURL):
+        mock_audience.return_value = self.audience
         mock_baseURL.return_value = 'http://{}:3000'.format(self.api_service_host)
+        feeds_service = FeedsService(self.client_id, self.client_secret)
         self.initializeTestData('./fixtures/setup_create_feed.sql')
-        response = self.feeds_service.createFeed(key='test_key',
+        response = feeds_service.createFeed(key='test_key',
                                                  timezone='UTC',
                                                  type='test_type',
                                                  facility_id=100)
