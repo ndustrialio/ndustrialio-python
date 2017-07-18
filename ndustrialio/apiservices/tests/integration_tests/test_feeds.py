@@ -39,6 +39,7 @@ class TestFeeds(unittest.TestCase):
             rows = cur.fetchall()
         return rows
 
+    # FeedsService.getFeeds should return particular feed if feed id is specified
     @patch.object(FeedsService, 'baseURL')
     @patch.object(FeedsService, 'audience')
     def test_get_feed(self, mock_audience, mock_baseURL):
@@ -49,6 +50,7 @@ class TestFeeds(unittest.TestCase):
         feed = feeds_service.getFeeds(id=4)
         self.assertEqual(feed, 'test')
 
+    # FeedsService.getFeeds should return all feeds if no feed id is specified
     @patch.object(FeedsService, 'baseURL')
     @patch.object(FeedsService, 'audience')
     def test_get_feeds(self, mock_audience, mock_baseURL):
@@ -59,6 +61,7 @@ class TestFeeds(unittest.TestCase):
         feeds = feeds_service.getFeeds()
         self.assertEqual(len(feeds), 7)
 
+    # FeedsService.getFeedByKey should return all feeds with specified feed key as Paged Response object
     @patch.object(FeedsService, 'baseURL')
     @patch.object(FeedsService, 'audience')
     def test_get_feed_by_key(self, mock_audience, mock_baseURL):
@@ -69,6 +72,7 @@ class TestFeeds(unittest.TestCase):
         feed = feeds_service.getFeedByKey(key='key_3')
         self.assertEqual(feed, 'test')
 
+    # FeedsService.createFeed should create a feed with the specified attributes
     @patch.object(FeedsService, 'baseURL')
     @patch.object(FeedsService, 'audience')
     def test_create_feed(self, mock_audience, mock_baseURL):
@@ -82,3 +86,5 @@ class TestFeeds(unittest.TestCase):
                                                  facility_id=100)
         feed = self.executeQuery('SELECT * from feeds')
         self.assertEqual(feed, 'test')
+
+    #

@@ -1,7 +1,5 @@
-CREATE TABLE IF NOT EXISTS feed_types(type varchar(50), down_after integer);
-INSERT IGNORE INTO feed_types(type, down_after) VALUES
-('test_type', 60);
-CREATE TABLE IF NOT EXISTS feeds(feed_type_id integer, key varchar(20), facility_id integer, timezone varchar(20), routing_keys text, token varchar(100), degraded_threshold float, critical_threshold float, created_at timestamp, updated_at timestamp);
+DROP TABLE IF EXISTS feeds;
+CREATE TABLE feeds(feed_type_id integer, key varchar(20), facility_id integer, timezone varchar(20), routing_keys text, token varchar(100), degraded_threshold float, critical_threshold float, created_at timestamp, updated_at timestamp);
 DELETE FROM feeds;
 INSERT INTO feeds(feed_type_id, key, facility_id, timezone, routing_keys, token, degraded_threshold, critical_threshold, created_at, updated_at) VALUES
 (1, 'key_1', 10, 'UTC', '[routing_key_1]', 'token_1', 0.8, 0.2, '1999-01-08 04:05:06', '2000-01-08 04:05:06'),
