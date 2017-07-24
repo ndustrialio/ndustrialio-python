@@ -17,10 +17,9 @@ class TestRunner:
             suite.addTests(self.loader.loadTestsFromModule(test_module))
 
         test_result = unittest.TextTestRunner(verbosity=2).run(suite)
-        failed_tests = test_result.failures
 
-        if failed_tests and raise_error:
-            raise Exception('Test failures: {}'.format(failed_tests))
+        if not test_result.wasSuccessful() and raise_error:
+            raise Exception('Some tests did not pass')
         else:
             return test_result
 

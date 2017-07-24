@@ -1,25 +1,26 @@
 import unittest
 import os
-import psycopg2
+from datetime import datetime
 from mock import patch
 from ndustrialio.apiservices.feeds import FeedsService
-from ndustrialio.apiservices.tests import postgres_test_utility as postgres
+from ndustrialio.apiservices.tests.postgres_test_utility import PostgresTestUtility
+from ndustrialio.apiservices.tests.cassandra_test_utility import CassandraTestUtility
 
 class TestFeeds(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        db_con = psycopg2.connect(database=os.environ.get('POSTGRES_DB'),
-                                  user=os.environ.get('POSTGRES_USER'),
-                                  password=os.environ.get('POSTGRES_PASSWORD'),
-                                  host=os.environ.get('POSTGRES_HOST'))
-        db_con.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
-        cls.db_con = db_con
+        cls.postgres_utility = PostgresTestUtility(database=os.environ.get('POSTGRES_DB'),
+                                                   user=os.environ.get('POSTGRES_USER'),
+                                                   password=os.environ.get('POSTGRES_PASSWORD'),
+                                                   host=os.environ.get('POSTGRES_HOST'))
+        cls.cassandra_utility = CassandraTestUtility(keyspace=os.environ.get('CASSANDRA_KEYSPACE'))
         cls.client_id = os.environ.get('CLIENT_ID')
         cls.client_secret = os.environ.get('CLIENT_SECRET')
         cls.api_service_host = os.environ.get('REALTIME_API_SERVICE_HOST')
         cls.audience = os.environ.get('AUDIENCE')
-        postgres.initializeTestData(cls.db_con, 'integration_tests/fixtures/setup_feeds.sql')
+        cls.postgres_utility.initializeTestData('integration_tests/fixtures/postgres/setup_feeds.sql')
+        cls.cassandra_utility.initializeTestData('integration_tests/fixtures/cassandra/setup_feeds.sql')
 
     # FeedsService.getFeeds should return particular feed if feed id is specified
     @patch.object(FeedsService, 'baseURL')
@@ -64,10 +65,10 @@ class TestFeeds(unittest.TestCase):
                                  type='test_feed_type',
                                  facility_id=100)
         try:
-            feed = postgres.executeQuery(self.db_con, "SELECT * FROM feeds WHERE key='create_feed_test_key'")
+            feed = self.postgres_utility.executeQuery("SELECT * FROM feeds WHERE key='create_feed_test_key'")
             self.assertEqual(len(feed), 1)
         finally:
-            postgres.executeQuery(self.db_con, "DELETE FROM feeds WHERE key='create_feed_test_key'")
+            self.postgres_utility.executeQuery("DELETE FROM feeds WHERE key='create_feed_test_key'")
 
     # FeedsService.createOutput should create an output with the specified attributes
     @patch.object(FeedsService, 'baseURL')
@@ -81,10 +82,10 @@ class TestFeeds(unittest.TestCase):
                                    label='create_output_test_label',
                                    type='test_output_type')
         try:
-            output = postgres.executeQuery(self.db_con, "SELECT * FROM outputs WHERE label='create_output_test_label'")
+            output = self.postgres_utility.executeQuery("SELECT * FROM outputs WHERE label='create_output_test_label'")
             self.assertEqual(len(output), 1)
         finally:
-            postgres.executeQuery(self.db_con, "DELETE FROM outputs WHERE label='create_output_test_label'")
+            self.postgres_utility.executeQuery("DELETE FROM outputs WHERE label='create_output_test_label'")
 
     # FeedsService.createField should create a field with the specified attributes
     @patch.object(FeedsService, 'baseURL')
@@ -96,12 +97,13 @@ class TestFeeds(unittest.TestCase):
         feeds_service.createField(feed_key='key_1',
                                   output_id=1,
                                   human_name='create_field_test_name',
-                                  field_descriptor='test_descriptor')
+                                  field_descriptor='test_descriptor',
+                                  type='string')
         try:
-            field = postgres.executeQuery(self.db_con, "SELECT * FROM output_fields WHERE human_name='create_field_test_name'")
+            field = self.postgres_utility.executeQuery("SELECT * FROM output_fields WHERE field_human_name='create_field_test_name'")
             self.assertEqual(len(field), 1)
         finally:
-            postgres.executeQuery(self.db_con, "DELETE FROM output_fields WHERE human_name='create_field_test_name'")
+            self.postgres_utility.executeQuery("DELETE FROM output_fields WHERE field_human_name='create_field_test_name'")
 
     # FeedsService.getFieldDescriptors should return fields of specified feed
     @patch.object(FeedsService, 'baseURL')
@@ -111,7 +113,7 @@ class TestFeeds(unittest.TestCase):
         mock_baseURL.return_value = 'http://{}:3000'.format(self.api_service_host)
         feeds_service = FeedsService(self.client_id, self.client_secret)
         field_descriptors = feeds_service.getFieldDescriptors(feed_id=1)
-        self.assertEqual(len(field_descriptors['records']), 3)
+        self.assertEqual(len(field_descriptors['records']), 4)
         self.assertEqual(field_descriptors['_meta']['offset'], 0)
 
     # FeedsService.getFieldDescriptors with limit smaller than total should return specified number of fields of specified feed
@@ -147,3 +149,39 @@ class TestFeeds(unittest.TestCase):
         feeds_service = FeedsService(self.client_id, self.client_secret)
         outputs = feeds_service.getFeedOutputs(feed_id=1)
         self.assertEqual(len(outputs['records']), 2)
+
+    # FeedsService.getUnprovisionedData should query cassandra for specified unprovisioned field's data
+    @patch.object(FeedsService, 'baseURL')
+    @patch.object(FeedsService, 'audience')
+    def test_get_unprovisioned_data(self, mock_audience, mock_baseURL):
+        mock_audience.return_value = self.audience
+        mock_baseURL.return_value = 'http://{}:3000'.format(self.api_service_host)
+        feeds_service = FeedsService(self.client_id, self.client_secret)
+        data = feeds_service.getUnprovisionedData(feed_id=1,
+                                                  field_descriptor='test_field_descriptor_1',
+                                                  time_start=datetime.strptime('2015-01-08T12:00:00.000Z',
+                                                                               '%Y-%m-%dT%H:%M:%S.%fZ'),
+                                                  time_end=datetime.strptime('2015-04-08T12:00:00.000Z',
+                                                                             '%Y-%m-%dT%H:%M:%S.%fZ'))
+        self.assertEqual(len(data), 2)
+
+    # FeedsService.getData should query Cassandra for specified field's data
+    @patch.object(FeedsService, 'baseURL')
+    @patch.object(FeedsService, 'audience')
+    def test_get_data(self, mock_audience, mock_baseURL):
+        mock_audience.return_value = self.audience
+        mock_baseURL.return_value = 'http://{}:3000'.format(self.api_service_host)
+        feeds_service = FeedsService(self.client_id, self.client_secret)
+        data = feeds_service.getData(output_id=1,
+                                     field_human_name='test_name_1',
+                                     window=60,
+                                     time_start=datetime.strptime('2015-01-08T12:00:00.000Z',
+                                                                  '%Y-%m-%dT%H:%M:%S.%fZ'),
+                                     time_end=datetime.strptime('2015-04-08T12:00:00.000Z',
+                                                                '%Y-%m-%dT%H:%M:%S.%fZ'))
+        self.assertEqual(len(data.records), 2)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.postgres_utility.close_connection()
+        cls.cassandra_utility.close_connection()

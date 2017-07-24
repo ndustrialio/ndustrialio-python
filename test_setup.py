@@ -9,11 +9,16 @@ setup(name='ndustrialio-python',
       license='',
       packages=find_packages(),
       install_requires=[
-          'pytz',
-          'tzlocal',
-          'requests'
+        'pytz',
+        'tzlocal',
+        'requests',
+        'mock == 1.0.1',
+        'coverage',
+        'codecov',
+        'psycopg2',
+        'cassandra-driver'
       ],
       dependency_links=[
-          'git+https://git@github.com/ndustrialio/auth0-python'
+        'git+https://git@github.com/ndustrialio/auth0-python'
       ],
       zip_safe=False)
