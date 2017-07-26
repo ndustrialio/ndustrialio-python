@@ -1,5 +1,6 @@
 INSERT INTO feed_types(type, down_after) VALUES
-('test_feed_type', 60);
+('test_feed_type_1', 60),
+('test_feed_type_2', 45);
 
 INSERT INTO feeds(status, feed_type_id, key, facility_id, timezone, routing_keys, token, degraded_threshold, critical_threshold, created_at, updated_at) VALUES
 ('Active', 1, 'key_1', 10, 'UTC', '[routing_key_1]', 'token_1', 0.8, 0.2, '1999-01-08 04:05:06', '2000-01-08 04:05:06'),
@@ -15,12 +16,13 @@ INSERT INTO output_types(type, category) VALUES
 
 INSERT INTO outputs(feed_id, label, output_type_id, facility_id, created_at, updated_at) VALUES
 (1, 'test_label_1', 1, 20, '1999-01-08 04:05:06', '2000-01-08 04:05:06'),
-(1, 'test_label_2', 1, 20, '1999-01-08 04:05:06', '2000-01-08 04:05:06'),
-(2, 'test_label_3', 1, 20, '1999-01-08 04:05:06', '2000-01-08 04:05:06');
-
+(1, 'test_label_2', 1, 20, '1999-02-08 04:05:06', '2000-02-08 04:05:06'),
+(2, 'test_label_3', 1, 20, '1999-03-08 04:05:06', '2000-03-08 04:05:06'),
+(3, 'test_label_4', 1, 30, '1999-04-08 04:05:06', '2000-04-08 04:05:06');
 
 INSERT INTO output_fields(output_id, field_descriptor, field_human_name, value_type, feed_key) VALUES
 (1, 'test_descriptor_1', 'test_name_1', 'string', 'key_1'),
 (1, 'test_descriptor_2', 'test_name_2', 'string', 'key_1'),
 (1, 'test_descriptor_3', 'test_name_3', 'string', 'key_1'),
-(1, 'test_descriptor_4', 'test_name_4', 'string', 'key_2');
+(1, 'test_descriptor_4', 'test_name_4', 'string', 'key_2'),
+(2, 'test_descriptor_5', 'test_name_5', 'string', 'key_2');
