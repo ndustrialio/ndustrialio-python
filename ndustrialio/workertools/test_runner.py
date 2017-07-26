@@ -6,7 +6,7 @@ class TestRunner:
     def __init__(self):
         self.loader = unittest.TestLoader()
 
-    def runTestCases(self, test_cases=None, raise_error=True):
+    def runTests(self, test_cases=None, raise_error=True):
 
         suite = unittest.TestSuite()
 
