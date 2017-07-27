@@ -1,18 +1,18 @@
-import psycopg2
 import os
+import psycopg2
 
 class PostgresTestUtility:
 
     def __init__(self, database, user, password, host):
-        self.postgres_con = psycopg2.connect(database=database,
-                                       user=user,
-                                       password=password,
-                                       host=host)
-        self.postgres_con.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+        self.connection = psycopg2.connect(dbname=database,
+                                           host=host,
+                                           user=user,
+                                           password=password)
+        self.connection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
 
-    def initializeTestData(self, setup_file=None):
+    def initTestDataFromFile(self, setup_file=None):
         try:
-            with self.postgres_con.cursor() as cur:
+            with self.connection.cursor() as cur:
                 cur.execute(self.fileRead(setup_file))
         except Exception as e:
             print 'Error: Could not insert test data'
@@ -20,7 +20,7 @@ class PostgresTestUtility:
 
     def executeQuery(self, query):
         rows = []
-        with self.postgres_con.cursor() as cur:
+        with self.connection.cursor() as cur:
             cur.execute(query)
             try:
                 rows = cur.fetchall()
@@ -36,4 +36,4 @@ class PostgresTestUtility:
 
     def close_connection(self):
         print 'Closing postgres connection...'
-        self.postgres_con.close()
+        self.connection.close()
