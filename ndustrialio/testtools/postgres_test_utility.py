@@ -1,7 +1,8 @@
 import os
 import psycopg2
+from ndustrialio.workertools.postgres_utility import PostgresUtility
 
-class PostgresTestUtility:
+class PostgresTestUtility(PostgresUtility):
 
     def __init__(self, database, user, password, host):
         self.connection = psycopg2.connect(dbname=database,

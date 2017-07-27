@@ -1,7 +1,8 @@
 import os
 from cassandra.cluster import Cluster
+from ndustrialio.workertools.cassandra_utility import CassandraUtility
 
-class CassandraTestUtility:
+class CassandraTestUtility(CassandraUtility):
 
     def __init__(self, keyspace, replication="{'class': 'SimpleStrategy', 'replication_factor': '2'}"):
         self.cluster = Cluster(contact_points=os.environ.get('CASSANDRA_HOSTS').split(','))
@@ -14,14 +15,10 @@ class CassandraTestUtility:
         try:
             query_list = self.fileRead(setup_file)
             for query in query_list:
-                self.executeQuery(query)
+                self.execute(query)
         except Exception as e:
             print 'Error: Could not insert test data'
             raise e
-
-    def executeQuery(self, query):
-        rows = self.session.execute(query)
-        return rows or []
 
     def fileRead(self, path):
         dir = os.path.dirname(__file__)
