@@ -1,4 +1,3 @@
-import os
 import psycopg2
 from ndustrialio.workertools.postgres_utility import PostgresUtility
 
@@ -30,9 +29,7 @@ class PostgresTestUtility(PostgresUtility):
         return rows
 
     def fileRead(self, path):
-        dir = os.path.dirname(__file__)
-        file_path = os.path.join(dir, path)
-        with open(file_path, 'r') as f:
+        with open(path, 'r') as f:
             return f.read()
 
     def close_connection(self):

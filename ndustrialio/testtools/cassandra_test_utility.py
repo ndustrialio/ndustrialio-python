@@ -21,9 +21,7 @@ class CassandraTestUtility(CassandraUtility):
             raise e
 
     def fileRead(self, path):
-        dir = os.path.dirname(__file__)
-        file_path = os.path.join(dir, path)
-        with open(file_path, 'r') as f:
+        with open(path, 'r') as f:
             return f.read().splitlines()
 
     def close_connection(self):
