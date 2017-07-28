@@ -8,18 +8,24 @@ from query import CQLSelect, Where
 
 class CassandraUtility:
 
-    def __init__(self, host, keyspace):
+    def __init__(self, host, keyspace, consistency_level=ConsistencyLevel.TWO, replication="{'class': 'SimpleStrategy', 'replication_factor': '2'}"):
 
         self.cluster = Cluster([host])
 
-        self.session = self.cluster.connect(keyspace=keyspace)
+        self.session = self.cluster.connect()
+
+        self.session.execute("CREATE KEYSPACE IF NOT EXISTS {} WITH REPLICATION = {}".format(keyspace, replication))
+
+        self.session.set_keyspace(keyspace)
+
+        self.consistency_level = consistency_level
 
 
     def execute(self, query, args=None):
 
         statement = self.session.prepare(query)
 
-        statement.consistency_level = ConsistencyLevel.TWO
+        statement.consistency_level = self.consistency_level
 
         if args is not None:
 
@@ -28,8 +34,6 @@ class CassandraUtility:
         else:
 
             return self.session.execute(statement)
-
-
 
 
     def getActiveOutputs(self, output_filter=None, field_filter=None):
@@ -246,3 +250,21 @@ class CassandraUtility:
         month = '%02d' % timestamp.month
 
         return str(timestamp.year) + '-' + month
+
+    def initDataFromFile(self, setup_file):
+        # Can also batch initialization data using cassandra.query.BatchStatement (only UPDATE, INSERT, DELETE)
+        try:
+            query_list = self.fileRead(setup_file)
+            for query in query_list:
+                self.execute(query=query)
+        except Exception as e:
+            print 'Error: Could not insert test data'
+            raise e
+
+    def fileRead(self, path):
+        with open(path, 'r') as f:
+            return f.read().splitlines()
+
+    def close_connection(self):
+        print 'Shutting down cassandra cluster...'
+        self.cluster.shutdown()

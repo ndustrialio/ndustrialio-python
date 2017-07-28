@@ -45,3 +45,21 @@ class PostgresUtility:
 
         self.connection.commit()
         cursor.close()
+
+    def initDataFromFile(self, setup_file=None):
+        try:
+            with self.connection.cursor() as cur:
+                cur.execute(self.fileRead(setup_file))
+        except Exception as e:
+            print 'Error: Could not insert test data'
+            self.connection.rollback()
+            raise e
+        self.connection.commit()
+
+    def fileRead(self, path):
+        with open(path, 'r') as f:
+            return f.read()
+
+    def close_connection(self):
+        print 'Closing postgres connection...'
+        self.connection.close()
