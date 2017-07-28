@@ -1,10 +1,11 @@
-import unittest
 import os
+import unittest
 from datetime import datetime
 from mock import patch
+from ndustrialio.testtools.cassandra_test_utility import CassandraTestUtility
 from ndustrialio.apiservices.feeds import FeedsService
-from ndustrialio.apiservices.tests.postgres_test_utility import PostgresTestUtility
-from ndustrialio.apiservices.tests.cassandra_test_utility import CassandraTestUtility
+from ndustrialio.testtools.postgres_test_utility import PostgresTestUtility
+
 
 class TestFeeds(unittest.TestCase):
 
@@ -14,13 +15,17 @@ class TestFeeds(unittest.TestCase):
                                                    user=os.environ.get('POSTGRES_USER'),
                                                    password=os.environ.get('POSTGRES_PASSWORD'),
                                                    host=os.environ.get('POSTGRES_HOST'))
-        cls.cassandra_utility = CassandraTestUtility(keyspace=os.environ.get('CASSANDRA_KEYSPACE'))
+        cls.cassandra_utility = CassandraTestUtility(host=os.environ.get('CASSANDRA_HOSTS').split(','),
+                                                     keyspace=os.environ.get('CASSANDRA_KEYSPACE'))
         cls.client_id = os.environ.get('CLIENT_ID')
         cls.client_secret = os.environ.get('CLIENT_SECRET')
         cls.api_service_host = os.environ.get('REALTIME_API_SERVICE_HOST')
         cls.audience = os.environ.get('AUDIENCE')
-        cls.postgres_utility.initializeTestData('integration_tests/fixtures/postgres/setup_feeds.sql')
-        cls.cassandra_utility.initializeTestData('integration_tests/fixtures/cassandra/setup_feeds.sql')
+        dir = os.path.dirname(__file__)
+        postgres_setup_file_path = os.path.join(dir, 'fixtures/postgres/setup_feeds.sql')
+        cassandra_setup_file_path = os.path.join(dir, 'fixtures/cassandra/setup_feeds.sql')
+        cls.postgres_utility.initDataFromFile(postgres_setup_file_path)
+        cls.cassandra_utility.initDataFromFile(cassandra_setup_file_path)
 
     # FeedsService.getFeeds should return particular feed if feed id is specified
     @patch.object(FeedsService, 'baseURL')
