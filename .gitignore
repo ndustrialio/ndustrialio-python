@@ -3,5 +3,7 @@ build/
 dist/
 ndustrialio_python.egg-info/
 .DS_Store
-test.py
 .wercker/
+.pyc
+wercker.yml
+
