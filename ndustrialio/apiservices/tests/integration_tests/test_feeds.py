@@ -21,7 +21,7 @@ class TestFeeds(unittest.TestCase):
         cls.client_id = os.environ.get('CLIENT_ID')
         cls.client_secret = os.environ.get('CLIENT_SECRET')
         cls.api_service_host = os.environ.get('REALTIME_API_SERVICE_HOST')
-        cls.audience = os.environ.get('AUDIENCE')
+        cls.audience = os.environ.get('REALTIME_AUDIENCE')
         dir = os.path.dirname(__file__)
         postgres_setup_file_path = os.path.join(dir, 'fixtures/postgres/setup_feeds.sql')
         cassandra_setup_file_path = os.path.join(dir, 'fixtures/cassandra/setup_feeds.sql')
