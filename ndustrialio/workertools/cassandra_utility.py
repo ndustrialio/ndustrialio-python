@@ -263,7 +263,10 @@ class CassandraUtility:
 
     def fileRead(self, path):
         with open(path, 'r') as f:
-            return f.read().splitlines()
+            return filter(None, f.read().splitlines())
+
+    def drop_keyspace(self, keyspace):
+        self.execute('DROP KEYSPACE {}'.format(keyspace))
 
     def close_connection(self):
         print 'Shutting down cassandra cluster...'

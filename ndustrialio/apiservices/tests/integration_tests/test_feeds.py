@@ -11,20 +11,20 @@ class TestFeeds(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.postgres_utility = PostgresUtility(database=os.environ.get('POSTGRES_DB'),
+        cls.postgres_utility = PostgresUtility(database=os.environ.get('REALTIME_POSTGRES_DB'),
                                                username=os.environ.get('POSTGRES_USER'),
                                                password=os.environ.get('POSTGRES_PASSWORD'),
                                                host=os.environ.get('POSTGRES_HOST'))
         cls.cassandra_utility = CassandraUtility(host=os.environ.get('CASSANDRA_HOSTS').split(',')[0],
                                                  keyspace=os.environ.get('CASSANDRA_KEYSPACE'),
                                                  consistency_level=None)
-        cls.client_id = os.environ.get('CLIENT_ID')
-        cls.client_secret = os.environ.get('CLIENT_SECRET')
+        cls.client_id = os.environ.get('FEEDS_CLIENT_ID')
+        cls.client_secret = os.environ.get('FEEDS_CLIENT_SECRET')
         cls.api_service_host = os.environ.get('REALTIME_API_SERVICE_HOST')
         cls.audience = os.environ.get('REALTIME_AUDIENCE')
         dir = os.path.dirname(__file__)
         postgres_setup_file_path = os.path.join(dir, 'fixtures/postgres/setup_feeds.sql')
-        cassandra_setup_file_path = os.path.join(dir, 'fixtures/cassandra/setup_feeds.sql')
+        cassandra_setup_file_path = os.path.join(dir, 'fixtures/cassandra/setup_feeds.cql')
         cls.postgres_utility.initDataFromFile(postgres_setup_file_path)
         cls.cassandra_utility.initDataFromFile(cassandra_setup_file_path)
 
@@ -286,4 +286,5 @@ class TestFeeds(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.postgres_utility.close_connection()
+        cls.cassandra_utility.drop_keyspace(os.environ.get('CASSANDRA_KEYSPACE'))
         cls.cassandra_utility.close_connection()

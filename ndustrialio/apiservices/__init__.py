@@ -391,7 +391,7 @@ class Service(ApiService):
         assert client_secret is not None
 
         token = oauth.login(client_id=client_id,
-                            client_secret= client_secret,
+                            client_secret=client_secret,
                             audience=self.audience(),
                             grant_type='client_credentials')
 

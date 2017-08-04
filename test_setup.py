@@ -16,7 +16,8 @@ setup(name='ndustrialio-python',
         'coverage',
         'codecov',
         'psycopg2',
-        'cassandra-driver'
+        'cassandra-driver',
+        'freezegun',
       ],
       dependency_links=[
         'git+https://git@github.com/ndustrialio/auth0-python'
