@@ -19,7 +19,7 @@ class TestFlywheeling(unittest.TestCase):
         dir = os.path.dirname(__file__)
         postgres_setup_file_path = os.path.join(dir, 'fixtures/postgres/setup_flywheeling.sql')
         cls.postgres_utility.initDataFromFile(postgres_setup_file_path)
-        cls.test_zone_id = cls.postgres_utility.execute('SELECT id FROM zones WHERE name={}'.format('test_zone_name_1'))
+        cls.test_zone_id = cls.postgres_utility.execute('SELECT id FROM zones WHERE name={}'.format('test_zone_name_1'))['id']
         cls.postgres_utility.execute('INSERT INTO runs(zone_id, solver_type, has_solution, name, ran_at) VALUES ({}, {}, {}, {}, {})'.format(cls.test_zone_id,
                                                                                                                                              'convex',
                                                                                                                                              'TRUE',
