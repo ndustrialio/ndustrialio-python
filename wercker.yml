@@ -1,0 +1,235 @@
+# This references the default Python container from
+# the Docker Hub with the 2.7 tag:
+# https://registry.hub.docker.com/_/python/
+# If you want to use a slim Python container with
+# version 3.4.3 you would use: python:3.4-slim
+# If you want Google's container you would reference google/python
+# Read more about containers on our dev center
+# http://devcenter.wercker.com/docs/containers/index.html
+box: nsdont/python-node
+# You can also use services such as databases. Read more on our dev center:
+# http://devcenter.wercker.com/docs/services/index.html
+
+services:
+
+        - name: postgres
+          id: sameersbn/postgresql
+          env:
+               DB_USER: $POSTGRES_USER
+               DB_PASS: $POSTGRES_PASSWORD
+               DB_NAME: realtime_test_db,rates_test_db,flywheeling_test_db,weather_test_db,cost_centers_test_db
+
+        - redis
+
+        - spotify/cassandra
+
+        - name: realtime
+          id: quay.io/ndustrialio/realtime-api-service
+          username: $QUAY_USER
+          password: $QUAY_PASSWORD
+          tag: latest
+          registry: https://quay.io
+          env:
+               CLIENT_ID: $REALTIME_SERVER_CLIENT_ID
+               CLIENT_SECRET: $REALTIME_SERVER_CLIENT_SECRET
+               POSTGRES_USER: $POSTGRES_USER
+               POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+               POSTGRES_DB: realtime_test_db
+               POSTGRES_HOST: postgres
+               NODE_ENV: wercker_test
+               REDIS_HOST: redis
+               REDIS_PORT: 6379
+               REDIS_DB: 0
+               CASSANDRA_HOSTS: cassandra
+               CASSANDRA_KEYSPACE: wercker_test
+
+        - name: rates
+          id: quay.io/ndustrialio/rates-api-service
+          username: $QUAY_USER
+          password: $QUAY_PASSWORD
+          tag: df826ec987300788367b975cf3b8e24fd8c769a7
+          registry: https://quay.io
+          env:
+               CLIENT_ID: $RATES_SERVER_CLIENT_ID
+               CLIENT_SECRET: $RATES_SERVER_CLIENT_SECRET
+               POSTGRES_USER: $POSTGRES_USER
+               POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+               POSTGRES_DB: rates_test_db
+               POSTGRES_HOST: postgres
+               NODE_ENV: wercker_test
+
+        #- name: flywheeling
+        #  id: quay.io/lineageanalytics/flywheeling-api
+        #  username: $QUAY_USER
+        #  password: $QUAY_PASSWORD
+        #  tag:
+        #  registry: https://quay.io
+        #  env:
+        #        CLIENT_ID:
+        #        CLIENT_SECRET:
+        #        POSTGRES_USER: $POSTGRES_USER
+        #        POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+        #        POSTGRES_DB: flywheeling_test_db
+        #        POSTGRES_HOST: postgres
+        #        NODE_ENV: wercker_test
+
+        #- name: weather
+        #  id: quay.io/ndustrialio/weather-api-service
+        #  username: $QUAY_USER
+        #  password: $QUAY_PASSWORD
+        #  tag:
+        #  registry: https://quay.io
+        #  env:
+        #        CLIENT_ID:
+        #        CLIENT_SECRET:
+        #        POSTGRES_USER: $POSTGRES_USER
+        #        POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+        #        POSTGRES_DB: weather_test_db
+        #        POSTGRES_HOST: postgres
+        #        NODE_ENV: wercker_test
+
+        #- name: cost_centers
+        #  id: quay.io/ndustrialio/cost-centers-api-service
+        #  username: $QUAY_USER
+        #  password: $QUAY_PASSWORD
+        #  tag:
+        #  registry: https://quay.io
+        #  env:
+        #        CLIENT_ID:
+        #        CLIENT_SECRET:
+        #        POSTGRES_USER: $POSTGRES_USER
+        #        POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+        #        POSTGRES_DB: cost_centers_test_db
+        #        POSTGRES_HOST: postgres
+        #        NODE_ENV: wercker_test
+
+# This is the build pipeline. Pipelines are the core of wercker
+# Read more about pipelines on our dev center
+# http://devcenter.wercker.com/docs/pipelines/index.html
+build:
+  # The steps that will be executed on build
+  # Steps make up the actions in your pipeline
+  # Read more about steps on our dev center:
+  # http://devcenter.wercker.com/docs/steps/index.html
+
+  steps:
+    # A step that sets up the python virtual environment
+    - virtualenv:
+        name: setup virtual environment
+        install_wheel: false # Enable wheel to speed up builds (experimental)
+
+    # # Use this virtualenv step for python 3.2
+    # - virtualenv
+    #     name: setup virtual environment
+    #     python_location: /usr/bin/python3.2
+
+    # A step that executes `pip install` command.
+    # - pip-install
+
+    # Install package and dependencies
+    - script:
+        name: install package
+        code: |
+          python setup.py install
+
+    # # This pip-install clears the local wheel cache
+    # - pip-install:
+    #     clean_wheel_dir: true
+
+    # A custom script step, name value is used in the UI
+    # and the code value contains the command that get executed
+    - script:
+        name: echo python information
+        code: |
+          echo "python version $(python --version) running"
+          echo "pip version $(pip --version) running"
+    # - script:
+    #     name: copy files to $WERCKER_OUTPUT_DIR
+    #    code: ./scripts/copy_files_to_wercker_output_dir.sh
+
+test:
+
+    steps:
+
+        - script:
+            name: View available container environment variables
+            code: |
+                env
+
+        - virtualenv:
+            name: setup test virtual environment
+            install_wheel: false
+
+        - script:
+            name: Set test case environment variables
+            code: |
+                export FEEDS_CLIENT_ID=$FEEDS_CLIENT_ID
+                export FEEDS_CLIENT_SECRET=$FEEDS_CLIENT_SECRET
+                export RATES_CLIENT_ID=$RATES_CLIENT_ID
+                export RATES_CLIENT_SECRET=$RATES_CLIENT_SECRET
+                export FLYWHEELING_CLIENT_ID=$FLYWHEELING_CLIENT_ID
+                export FLYWHEELING_CLIENT_SECRET=$FLYWHEELING_CLIENT_SECRET
+                #export WEATHER_CLIENT_ID=
+                #export WEATHER_CLIENT_SECRET=
+                #export COST_CENTERS_CLIENT_ID=
+                #export COST_CENTERS_CLIENT_SECRET=
+
+                export REALTIME_AUDIENCE=$REALTIME_SERVER_CLIENT_ID
+                export RATES_AUDIENCE=$RATES_SERVER_CLIENT_ID
+                #export FLYWHEELING_AUDIENCE=
+                #export WEATHER_AUDIENCE=
+                #export COST_CENTERS_AUDIENCE=
+
+                export POSTGRES_USER=$POSTGRES_USER
+                export POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+                export POSTGRES_HOST=$POSTGRES_PORT_5432_TCP_ADDR
+                export REALTIME_POSTGRES_DB=realtime_test_db
+                export RATES_POSTGRES_DB=rates_test_db
+                export FLYWHEELING_POSTGRES_DB=flywheeling_test_db
+                export WEATHER_POSTGRES_DB=weather_test_db
+                export COST_CENTERS_POSTGRES_DB=cost_centers_test_db
+
+                export CASSANDRA_HOSTS=cassandra
+                export CASSANDRA_KEYSPACE=wercker_test
+                export CASS_DRIVER_NO_CYTHON=1
+
+                export REALTIME_API_SERVICE_HOST=$REALTIME_PORT_3000_TCP_ADDR
+                export RATES_API_SERVICE_HOST=$RATES_PORT_3000_TCP_ADDR
+                export FLYWHEELING_API_SERVICE_HOST=$FLYWHEELING_PORT_3000_TCP_ADDR
+                export WEATHER_API_SERVICE_HOST=$WEATHER_PORT_3000_TCP_ADDR
+                export COST_CENTERS_API_SERVICE_HOST=$COST_CENTERS_PORT_3000_TCP_ADDR
+
+        - script:
+            name: Install test dependencies
+            code: |
+                python test_setup.py install
+                pip install git+https://git@github.com/ndustrialio/auth0-python
+
+        - script:
+            name: Run tests
+            code: |
+                python test_runner.py
+
+        - script:
+            name: Check code coverage
+            code: |
+                coverage run --include ./ndustrialio/apiservices/* test_runner.py
+                if [ -z ${MIN_CODE_COVERAGE+x} ]; then
+                    echo "env variable MIN_CODE_COVERAGE is not set - pipeline will pass regardless of coverage percent"
+                    coverage report
+                else
+                    coverage report --fail-under=$MIN_CODE_COVERAGE
+                fi
+
+        - script:
+            name: Upload coverage results
+            code:
+                codecov --token=$CODECOV_TOKEN --commit=$WERCKER_GIT_COMMIT
+
+status-wait:
+    steps:
+
+        - maestrohealthcaretechnologies/wait-github-statuses:
+            status_contexts: wercker/test
+            timeout: 10
+            github_token: $GITHUB_STATUS_TOKEN
