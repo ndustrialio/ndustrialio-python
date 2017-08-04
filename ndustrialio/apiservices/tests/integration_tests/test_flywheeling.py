@@ -157,3 +157,7 @@ class TestFlywheeling(unittest.TestCase):
     # FlywheelingService.addOutputForRun should add output to specified run (endpoint does not exist)
 
     # FlywheelingService.removeOutputForRun should remove the output of the specified run (endpoint does not exist)
+
+    @classmethod
+    def setUpClass(cls):
+        cls.postgres_utility.close_connection()
