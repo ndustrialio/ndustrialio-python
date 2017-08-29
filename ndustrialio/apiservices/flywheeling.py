@@ -98,5 +98,61 @@ class FlywheelingService(Service):
     def removeOutputForRun(self, run_id, execute=True):
         assert isinstance(run_id, int)
         return self.execute(DELETE(uri='runs/{}/output'.format(run_id)), execute)
-    
-    
+
+    ## Facility Runs
+
+    def createRunForFacility(self, facility_id, run_obj):
+        assert isinstance(facility_id, int)
+        assert isinstance(run_obj, dict)
+        return self.execute(POST(uri='/facilities/{}/runs'.format(facility_id)).body(run_obj))
+
+    def getRunsForFacility(self, facility_id, orderBy=None, reverseOrder=False, execute=True):
+        assert isinstance(facility_id, int)
+        params = {}
+        if orderBy:
+            assert isinstance(orderBy, str)
+            params['orderBy'] = orderBy
+        if reverseOrder:
+            assert isinstance(reverseOrder, bool)
+        params['reverseOrder'] = reverseOrder
+        return PagedResponse(self.execute(GET(uri='facilities/{}/runs'.format(facility_id)).params(params), execute))
+
+    def getFacilityRun(self, facility_id, run_id, execute=True):
+        assert isinstance(facility_id, int)
+        assert isinstance(run_id, int)
+        return self.execute(GET(uri='facilities/{}/runs/{}'.format(facility_id, run_id)), execute)
+
+    def getLatestFacilityRun(self, facility_id):
+        assert isinstance(facility_id, int)
+        params = {'latest': True}
+        result = self.execute(GET(uri='facilities/{}/runs'.format(facility_id)).params(params), True)
+        if len(result["records"]) > 0:
+            return result["records"][0]
+        else:
+            return None
+
+    def removeFacilityRun(self, facility_id, run_id, execute=True):
+        assert isinstance(facility_id, int)
+        assert isinstance(run_id, int)
+        return self.execute(DELETE(uri='facilities/{}/runs/{}'.format(facility_id, run_id)), execute)
+
+    ## Facility Run Output
+
+    def getOutputForFacilityRun(self, facility_id, run_id, execute=True):
+        assert isinstance(run_id, int)
+        assert isinstance(facility_id, int)
+        return self.execute(GET(uri='facilities/{}/runs/{}/output'.format(facility_id, run_id)), execute)
+
+    def addOutputForFacilityRun(self, facility_id, run_id, data_obj):
+        assert isinstance(facility_id, int)
+        assert isinstance(run_id, int)
+        if not (isinstance(data_obj, dict) or isinstance(data_obj, list)):
+            raise AssertionError("Must pass in a dictionary or list to be formatted into json")
+
+        dataDict = {"data": data_obj}
+        return self.execute(POST(uri='facilities/{}/runs/{}/output'.format(facility_id, run_id)).body(dataDict))
+
+    def removeOutputForFacilityRun(self, facility_id, run_id, execute=True):
+        assert isinstance(facility_id, int)
+        assert isinstance(run_id, int)
+        return self.execute(DELETE(uri='facilities/{}/runs/{}/output'.format(facility_id, run_id)), execute)
