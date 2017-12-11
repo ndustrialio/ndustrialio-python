@@ -1,6 +1,7 @@
 from ndustrialio.apiservices import *
 from datetime import datetime
 
+
 class RatesService(Service):
 
     def __init__(self, client_id, client_secret=None):
@@ -50,11 +51,25 @@ class RatesService(Service):
         assert isinstance(id, int)
         assert isinstance(timeStart, datetime)
         assert isinstance(timeEnd, datetime)
-        params['timeEnd'] = get_epoch_time(timeEnd)
-        params['timeStart'] = get_epoch_time(timeStart)
-        
-        return self.execute(GET(uri='schedules/{}/usage/periods'.format(id)).params(params), execute)
-    
+
+        # split the times up into regions avoiding year boundaries
+        # e.g [(timeEnd, EndofYear1), (StartofYear2, EndofYear2), (StartofYear3, timeEnd)]
+        EoY = timeStart.replace(month=12, day=31, hour=23, minute=59, second=59)
+        timeBoundaries = [(timeStart, min(timeEnd,EoY))]
+        while timeBoundaries[-1][1] != timeEnd:
+            EoY = EoY.replace(year=EoY.year+1)
+            SoY = EoY.replace(month=1, day=1, hour=0, minute=0, second=0)
+            timeBoundaries.append((SoY, min(timeEnd,EoY)))
+
+        # combine all calls into one. offset is set to 0
+        data = dict(_meta=dict(count=0, offset=0), records=[])
+        for times in timeBoundaries:
+            params['timeStart'] = get_epoch_time(times[0])
+            params['timeEnd'] = get_epoch_time(times[1])
+            d = self.execute(GET(uri='schedules/{}/usage/periods'.format(id)).params(params), execute)
+            data['records'].extend(d['records'])
+            data['_meta']['count'] += d['_meta']['count']
+        return data
     '''
         Get all demand periods for a range of time
         
@@ -70,15 +85,31 @@ class RatesService(Service):
         assert isinstance(id, int)
         assert isinstance(timeStart, datetime)
         assert isinstance(timeEnd, datetime)
-        params['timeEnd'] = get_epoch_time(timeEnd)
-        params['timeStart'] = get_epoch_time(timeStart)
+
+        # split the times up into regions avoiding year boundaries
+        # e.g [(timeEnd, EndofYear1), (StartofYear2, EndofYear2), (StartofYear3, timeEnd)]
+        EoY = timeStart.replace(month=12, day=31, hour=23, minute=59, second=59)
+        timeBoundaries = [(timeStart, min(timeEnd, EoY))]
+        while timeBoundaries[-1][1] != timeEnd:
+            EoY = EoY.replace(year=EoY.year + 1)
+            SoY = EoY.replace(month=1, day=1, hour=0, minute=0, second=0)
+            timeBoundaries.append((SoY, min(timeEnd, EoY)))
+
         if season_type is not None:
             assert isinstance(season_type, str)
             params['season_type'] = season_type
+
+        # combine all calls into one. offset is set to 0
+        data = dict(_meta=dict(count=0, offset=0), records=[])
+        for times in timeBoundaries:
+            params['timeStart'] = get_epoch_time(times[0])
+            params['timeEnd'] = get_epoch_time(times[1])
+            d = self.execute(GET(uri='schedules/{}/demand/periods'.format(id)).params(params), execute)
+            data['records'].extend(d['records'])
+            data['_meta']['count'] += d['_meta']['count']
         
-        return self.execute(GET(uri='schedules/{}/demand/periods'.format(id)).params(params), execute)
+        return data
     
     def getRTPPeriod(self, id, execute=True):
         
         return self.execute(GET(uri='rtp/periods/{}'.format(id)), execute)
-
