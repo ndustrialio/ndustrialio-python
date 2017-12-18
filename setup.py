@@ -16,6 +16,5 @@ setup(name='ndustrialio-python',
         'numpy'
       ],
       dependency_links=[
-        'git+https://git@github.com/ndustrialio/auth0-python.git'
       ],
       zip_safe=False)

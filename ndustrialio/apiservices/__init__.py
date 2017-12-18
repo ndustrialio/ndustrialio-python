@@ -1,6 +1,5 @@
 import requests
 import os
-from auth0.v2.authentication import Oauth
 import json
 from datetime import datetime
 import pytz
@@ -10,11 +9,13 @@ API_VERSION = 'v1'
 
 BASE_URL = 'http://api.ndustrial.io'
 
-AUTH0_URL = 'ndustrialio.auth0.com'
+AUTH_URL = 'https://contxt-auth.api.ndustrial.io'
+
 
 def delocalize_datetime(dt_object):
     localized_dt = get_localzone().localize(dt_object)
     return localized_dt.astimezone(pytz.utc)
+
 
 def get_epoch_time(dt_object):
 
@@ -26,7 +27,6 @@ def get_epoch_time(dt_object):
     utc_1970 = datetime(1970, 1, 1).replace(tzinfo=pytz.utc)
     
     return int((dt_object.astimezone(pytz.utc) - utc_1970).total_seconds())
-
 
 
 class ApiClient(object):
@@ -113,6 +113,7 @@ class PagedResponse(object):
         for record in self.records:
             yield record
 
+
 class DataResponse(object):
 
     def __init__(self, data, client):
@@ -147,8 +148,6 @@ class DataResponse(object):
                 self.records = response['records']
             else:
                 break
-
-
 
 
 class StringRequest(object):
@@ -202,19 +201,20 @@ class StringRequest(object):
     def __str__(self):
         return self.request_string
 
+
 class ApiRequest(object):
 
     URLENCODED_CONTENT_TYPE = 'application/x-www-form-urlencoded'
     JSON_CONTENT_TYPE = 'application/json'
 
-    def __init__(self, uri):
+    def __init__(self, uri, authorize=True):
 
         self.uri = uri
 
         self.http_base_url = None
 
         # authorize request, default true
-        self.authorize_request = True
+        self.authorize_request = authorize
 
         self.http_content_type=self.JSON_CONTENT_TYPE
 
@@ -225,7 +225,6 @@ class ApiRequest(object):
         self.http_method = None
 
         self.http_body = {}
-
 
     def params(self, params=None):
 
@@ -315,39 +314,42 @@ class ApiRequest(object):
 
 class GET(ApiRequest):
 
-    def __init__(self, uri):
+    def __init__(self, uri, authorize=True):
 
-        super(GET, self).__init__(uri)
+        super(GET, self).__init__(uri, authorize)
 
     def method(self, method=None):
 
         return 'GET'
 
+
 class POST(ApiRequest):
 
-    def __init__(self, uri):
+    def __init__(self, uri, authorize=True):
 
-        super(POST, self).__init__(uri)
+        super(POST, self).__init__(uri, authorize)
 
     def method(self, method=None):
 
         return 'POST'
 
+
 class PUT(ApiRequest):
 
-    def __init__(self, uri):
+    def __init__(self, uri, authorize=True):
 
-        super(PUT, self).__init__(uri)
+        super(PUT, self).__init__(uri, authorize)
 
     def method(self, method=None):
 
         return 'PUT'
 
+
 class DELETE(ApiRequest):
 
-    def __init__(self, uri):
+    def __init__(self, uri, authorize=True):
 
-        super(DELETE, self).__init__(uri)
+        super(DELETE, self).__init__(uri, authorize)
 
     def method(self, method=None):
 
@@ -358,7 +360,7 @@ class ApiService(object):
 
     def __init__(self):
 
-        self.client=None
+        self.client = None
 
     def baseURL(self):
 
@@ -376,6 +378,26 @@ class ApiService(object):
             return api_request.base_url(self.baseURL())
 
 
+class AuthService(ApiService):
+
+    def __init__(self, auth_url):
+
+        super(AuthService, self).__init__()
+        self.url = auth_url
+        self.client = ApiClient(None)
+
+    def baseURL(self):
+        return self.url
+
+    def machine_login(self, client_id, client_secret, audience):
+        body = {'client_id': client_id,
+                'client_secret': client_secret,
+                'grant_type': 'client_credentials',
+                'audience': audience}
+
+        return self.execute(POST(uri='oauth/token', authorize=False).body(body))
+
+
 class Service(ApiService):
 
     def __init__(self, client_id, client_secret = None):
@@ -383,23 +405,23 @@ class Service(ApiService):
         super(Service, self).__init__()
 
         # need to login to get JWT token
-        oauth = Oauth(AUTH0_URL)
+        auth = AuthService(AUTH_URL)
 
         if client_secret is None:
             client_secret = os.environ.get('CLIENT_SECRET')
 
         assert client_secret is not None
 
-        token = oauth.login(client_id=client_id,
-                            client_secret= client_secret,
-                            audience=self.audience(),
-                            grant_type='client_credentials')
+        token = auth.machine_login(client_id=client_id,
+                                   client_secret= client_secret,
+                                   audience=self.audience())
 
         self.client = ApiClient(access_token=token['access_token'])
 
     def audience(self):
 
         return 'base_audience'
+
 
 class LegacyService(ApiService):
 
@@ -416,6 +438,7 @@ class LegacyService(ApiService):
 
     def baseURL(self):
         return BASE_URL
+
 
 class BatchService(LegacyService):
 
