@@ -29,7 +29,7 @@ class RatesService(Service):
     def getScheduleRTPPeriods(self, id, orderBy=None, reverseOrder=False, execute=True):
         
         params = {}
-        if  orderBy:
+        if orderBy:
             assert isinstance(orderBy, str)
             params['orderBy'] = orderBy
         assert isinstance(reverseOrder, bool)
@@ -46,11 +46,11 @@ class RatesService(Service):
         timeEnd (datetime) - end of the time range
     '''
     def getUsagePeriods(self, id, timeStart, timeEnd, execute=True):
-        
-        params = {}
         assert isinstance(id, int)
         assert isinstance(timeStart, datetime)
         assert isinstance(timeEnd, datetime)
+        if timeStart.tzinfo is None or timeEnd.tzinfo is None:
+            raise ValueError('timeStart and timeEnd must be tz aware')
 
         # split the times up into regions avoiding year boundaries
         # e.g [(timeEnd, EndofYear1), (StartofYear2, EndofYear2), (StartofYear3, timeEnd)]
@@ -63,6 +63,7 @@ class RatesService(Service):
 
         # combine all calls into one. offset is set to 0
         data = dict(_meta=dict(count=0, offset=0), records=[])
+        params = {}
         for times in timeBoundaries:
             params['timeStart'] = get_epoch_time(times[0])
             params['timeEnd'] = get_epoch_time(times[1])
@@ -80,11 +81,11 @@ class RatesService(Service):
         season_type (str) - season type for demand (tou or flat)
     '''
     def getDemandPeriods(self, id, timeStart, timeEnd, season_type=None, execute=True):
-        
-        params = {}
         assert isinstance(id, int)
         assert isinstance(timeStart, datetime)
         assert isinstance(timeEnd, datetime)
+        if timeStart.tzinfo is None or timeEnd.tzinfo is None:
+            raise ValueError('timeStart and timeEnd must be tz aware')
 
         # split the times up into regions avoiding year boundaries
         # e.g [(timeEnd, EndofYear1), (StartofYear2, EndofYear2), (StartofYear3, timeEnd)]
@@ -95,6 +96,7 @@ class RatesService(Service):
             SoY = EoY.replace(month=1, day=1, hour=0, minute=0, second=0)
             timeBoundaries.append((SoY, min(timeEnd, EoY)))
 
+        params = {}
         if season_type is not None:
             assert isinstance(season_type, str)
             params['season_type'] = season_type
