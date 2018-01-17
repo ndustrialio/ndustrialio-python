@@ -9,7 +9,7 @@ API_VERSION = 'v1'
 
 BASE_URL = 'http://api.ndustrial.io'
 
-AUTH_URL = 'https://contxt-auth.api.ndustrial.io'
+AUTH_URL = 'https://contxtauth.com'
 
 
 def delocalize_datetime(dt_object):
