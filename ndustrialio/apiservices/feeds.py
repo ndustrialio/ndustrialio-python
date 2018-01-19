@@ -174,11 +174,14 @@ class FeedsService(Service):
 
         return self.execute(GET(uri=uri).params(params), execute=execute)
 
-    def getFields(self, output_id, execute=True):
+    def getFields(self, output_id, limit=1000, offset=0, execute=True):
 
         # assert isinstance(output_id, int)
 
-        return self.execute(GET('outputs/' + str(output_id) + '/fields'), execute=execute)
+        params = {'limit': limit,
+                  'offset': offset}
+
+        return self.execute(GET('outputs/' + str(output_id) + '/fields').params(params), execute=execute)
 
     def getTypes(self, execute=True):
 

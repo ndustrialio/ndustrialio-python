@@ -116,7 +116,7 @@ class PagedResponse(object):
 class DataResponse(object):
 
     def __init__(self, data, client):
-        self.client = client;
+        self.client = client
         self.count = data['meta']['count']
         self.has_more = data['meta']['has_more']
 
