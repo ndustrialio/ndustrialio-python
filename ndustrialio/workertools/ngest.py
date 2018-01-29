@@ -85,5 +85,3 @@ class Ngest(object):
             ngest_service.sendData(self.feed_token, self.feed_key, message)
 
         self.time_series = TimeSeries(self.feed_key)
-
-        self.time_series = TimeSeries(self.feed_key)
