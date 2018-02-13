@@ -9,46 +9,46 @@ nGest is a simple JSON format for pushing data to the ndustrial.io data ingestio
         {
             "timestamp": "2017-01-27 08:08:00",
             "data": {
-                "example_field": 28.0
+                "example_field": "28.0"
             }
         },
         {
             "timestamp": "2017-01-27 08:05:00",
             "data": {
-                "example_field": 27.7,
-                "example_field3": 27.7,
-                "example_field2": 27.7,
-                "example_field6": 27.7,
-                "example_field5": 27.7,
-                "example_field4": 27.7
+                "example_field": "27.7",
+                "example_field3": "27.7",
+                "example_field2": "27.7",
+                "example_field6": "27.7",
+                "example_field5": "27.7",
+                "example_field4": "27.7"
             }
         },
         {
             "timestamp": "2017-01-27 08:07:00",
             "data": {
-                "example_field": 27.9
+                "example_field": "27.9"
             }
         },
         {
             "timestamp": "2017-01-27 08:04:00",
             "data": {
-                "example_field": 27.6
+                "example_field": "27.6"
             }
         },
         {
             "timestamp": "2017-01-27 08:03:00",
             "data": {
-                "example_field3": 27.5,
-                "example_field2": 27.5,
-                "example_field": 27.5,
-                "example_field5": 27.5,
-                "example_field4": 27.5
+                "example_field3": "27.5",
+                "example_field2": "27.5",
+                "example_field": "27.5",
+                "example_field5": "27.5",
+                "example_field4": "27.5"
             }
         },
         {
             "timestamp": "2017-01-27 08:06:00",
             "data": {
-                "example_field": 27.8
+                "example_field": "27.8"
             }
         }
     ],
