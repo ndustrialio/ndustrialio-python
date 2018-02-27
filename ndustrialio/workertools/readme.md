@@ -7,53 +7,88 @@ nGest is a simple JSON format for pushing data to the ndustrial.io data ingestio
 {
     "data": [
         {
-            "timestamp": "2017-01-27 08:08:00",
+            "timestamp": "2018-02-27 14:42:53",
             "data": {
-                "example_field": "28.0"
+                "example_field": {
+                    "value": "32"
+                }
             }
         },
         {
-            "timestamp": "2017-01-27 08:05:00",
+            "timestamp": "2018-02-27 14:35:53",
             "data": {
-                "example_field": "27.7",
-                "example_field3": "27.7",
-                "example_field2": "27.7",
-                "example_field6": "27.7",
-                "example_field5": "27.7",
-                "example_field4": "27.7"
+                "example_field": {
+                    "value": "25"
+                }
             }
         },
         {
-            "timestamp": "2017-01-27 08:07:00",
+            "timestamp": "2018-02-27 14:29:53",
             "data": {
-                "example_field": "27.9"
+                "example_field": {
+                    "value": "19"
+                }
             }
         },
         {
-            "timestamp": "2017-01-27 08:04:00",
+            "timestamp": "2018-02-27 14:12:53",
             "data": {
-                "example_field": "27.6"
+                "example_field": {
+                    "value": "2"
+                }
             }
         },
         {
-            "timestamp": "2017-01-27 08:03:00",
+            "timestamp": "2018-02-27 14:37:53",
             "data": {
-                "example_field3": "27.5",
-                "example_field2": "27.5",
-                "example_field": "27.5",
-                "example_field5": "27.5",
-                "example_field4": "27.5"
+                "example_field": {
+                    "value": "27"
+                }
             }
         },
         {
-            "timestamp": "2017-01-27 08:06:00",
+            "timestamp": "2018-02-27 14:51:53",
             "data": {
-                "example_field": "27.8"
+                "example_field": {
+                    "value": "41"
+                }
+            }
+        },
+        {
+            "timestamp": "2018-02-27 14:16:53",
+            "data": {
+                "example_field": {
+                    "value": "6"
+                }
+            }
+        },
+        {
+            "timestamp": "2018-02-27 14:17:53",
+            "data": {
+                "example_field": {
+                    "value": "7"
+                }
+            }
+        },
+        {
+            "timestamp": "2018-02-27 14:23:53",
+            "data": {
+                "example_field": {
+                    "value": "13"
+                }
+            }
+        },
+        {
+            "timestamp": "2018-02-27 14:57:53",
+            "data": {
+                "example_field": {
+                    "value": "47"
+                }
             }
         }
     ],
     "type": "timeseries",
-    "feedKey": "example"
+    "feedKey": "example_feed"
 }
 ```
 
