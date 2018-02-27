@@ -25,7 +25,7 @@ class Message(object):
             self.data[timestamp] = field_map
 
         if field not in field_map:
-            field_map[field] = str(value)
+            field_map[field] = {"value": str(value)}
             self.size += 1
         else:
             raise Exception('Field: ' + field + ' already present at timestamp: ' + timestamp)
