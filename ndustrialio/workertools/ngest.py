@@ -32,9 +32,9 @@ class Message(object):
 
         return True
 
-    def __str__(self):
-        ser_map = {}
-        ser_map['type'] = TIMESERIES_TYPE
+    def pre_serialize(self):
+        serialize_map = {}
+        serialize_map['type'] = TIMESERIES_TYPE
         data_arr = []
 
         for timestamp, fields in self.data.iteritems():
@@ -42,9 +42,12 @@ class Message(object):
                         'data': fields}
             data_arr.append(data_map)
 
-        ser_map['data'] = data_arr
-        ser_map['feedKey'] = self.feed_key
-        return json.dumps(ser_map)
+        serialize_map['data'] = data_arr
+        serialize_map['feedKey'] = self.feed_key
+        return serialize_map
+
+    def __str__(self):
+        return json.dumps(self.pre_serialize())
 
 
 class TimeSeries(object):
@@ -67,7 +70,7 @@ class TimeSeries(object):
 
     def __iter__(self):
         for message in self.messages:
-            yield str(message)
+            yield message.pre_serialize()
 
 
 class Ngest(object):
