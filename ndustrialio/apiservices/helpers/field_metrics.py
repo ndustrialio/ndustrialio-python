@@ -1,9 +1,8 @@
 from datetime import timedelta, datetime
-from scipy import stats
-import time
 from ndustrialio.apiservices import *
 from ndustrialio.apiservices.feeds import FeedsService
 import pytz
+import math
 
 
 class FieldMetrics:
@@ -130,33 +129,41 @@ class FieldMetrics:
         Calculate the metrics we're trying to grab
     '''
     def calculateMetrics(self, time_array, value_array, start_time_utc, end_time_utc, num_bins):
+        assert len(time_array) == len(value_array)
 
-        mean_metric_tuple = stats.binned_statistic(x=time_array,
-                                                   values=value_array,
-                                                   statistic='mean',
-                                                   bins=num_bins,
-                                                   range=[(start_time_utc, end_time_utc)])
+        mins = [None] * num_bins
+        maxs = [None] * num_bins
+        means = [None] * num_bins
+        # Previous implementation had empty entries as 0 instead of nan so replicate that.
+        stddevs = [0] * num_bins
+        binned = [[] for _ in xrange(num_bins)]
 
-        min_metric_tuple = stats.binned_statistic(x=time_array,
-                                                  values=value_array,
-                                                  statistic='min',
-                                                  bins=num_bins,
-                                                  range=[(start_time_utc, end_time_utc)])
+        # Assume buckets evenly divided.
+        per_bucket, remainder = divmod(end_time_utc - start_time_utc, num_bins)
+        assert remainder == 0
 
-        max_metric_tuple = stats.binned_statistic(x=time_array,
-                                                  values=value_array,
-                                                  statistic='max',
-                                                  bins=num_bins,
-                                                  range=[(start_time_utc, end_time_utc)])
+        for time, val in zip(time_array, value_array):
+            idx = (time - start_time_utc) / per_bucket
+            binned[idx].append(val)
 
-        std_metric_tuple = stats.binned_statistic(x=time_array,
-                                                  values=value_array,
-                                                  statistic='std',
-                                                  bins=num_bins,
-                                                  range=[(start_time_utc, end_time_utc)])
+        for i, vals in enumerate(binned):
+            if vals:
+                mins[i] = min(vals)
+                maxs[i] = max(vals)
+                means[i] = math.fsum(vals) / len(vals)
 
-        return {'mean': self.populateFinalBucket(mean_metric_tuple),
-               'minimum': self.populateFinalBucket(min_metric_tuple),
-               'maximum': self.populateFinalBucket(max_metric_tuple),
-               'standard_deviation': self.populateFinalBucket(std_metric_tuple)
-               }
+        for i, vals in enumerate(binned):
+            if vals:
+                mean = means[i]
+                sq_diffs = [(v - mean) ** 2 for v in vals]
+                stddevs[i] = math.sqrt(math.fsum(sq_diffs) / len(sq_diffs))
+
+        # Generate dates for each bucket.
+        dates = [start_time_utc + (bin * per_bucket) for bin in xrange(num_bins + 1)]
+
+        return dict(
+            mean=self.populateFinalBucket((means, dates)),
+            minimum=self.populateFinalBucket((mins, dates)),
+            maximum=self.populateFinalBucket((maxs, dates)),
+            standard_deviation=self.populateFinalBucket((stddevs, dates))
+        )
