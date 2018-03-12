@@ -12,6 +12,8 @@ setup(name='ndustrialio-python',
         'pytz',
         'tzlocal',
         'requests',
+        'scipy',
+        'numpy'
       ],
       dependency_links=[
       ],
