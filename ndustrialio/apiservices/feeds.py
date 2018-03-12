@@ -242,3 +242,132 @@ class FeedsService(Service):
                             .body(body)
                             .params(params))
 
+    '''
+    POST /facilities/:facility_id/groupings
+
+    '''
+    def createFieldGrouping(self, facility_id, label, description, is_public):
+
+        assert isinstance(facility_id, int)
+        assert isinstance(label, str)
+        assert isinstance(description, str)
+        assert isinstance(is_public, bool)
+
+        body = {'label': label,
+                'description': description,
+                'is_public': is_public
+                }
+
+        return self.execute(POST(uri='facilities/{}/groupings'.format(facility_id))
+                            .body(body))
+
+    '''
+    GET /groupings/:grouping_id
+
+    '''
+    def getFieldGroupingById(self, field_grouping_id):
+
+        assert isinstance(field_grouping_id, str)
+
+        return self.execute(GET(uri='groupings/{}'.format(field_grouping_id)))
+
+    '''
+    GET /facilities/:facility_id/groupings
+
+    '''
+    def getFieldGroupingsForFacility(self, facility_id):
+
+        assert isinstance(facility_id, int)
+
+        return PagedResponse(self.execute(GET(uri='facilities/{}/groupings'.format(facility_id)), execute=True))
+
+    '''
+    GET /facilities/:facility_id/groupings?slug=<slug>
+
+    '''
+    def getFieldGroupingBySlug(self, facility_id, slug):
+
+        assert isinstance(facility_id, int)
+        assert isinstance(slug, str)
+
+        params = {'slug': slug}
+
+        response = PagedResponse(self.execute(GET(uri='facilities/{}/groupings'.format(facility_id)).params(params), execute=True))
+        if self.total_records == 0:
+            return None
+
+        return response.first()
+
+    '''
+    PUT /groupings/:grouping_id
+
+    '''
+    def updateFieldGrouping(self, field_grouping_id, label=None, description=None, is_public=None):
+
+        assert isinstance(field_grouping_id, str)
+
+        body = {}
+        if label:
+            assert isinstance(label, str)
+            body['label'] = label
+
+        if description:
+            assert isinstance(description, str)
+            body['description'] = description
+
+        if is_public:
+            assert isinstance(is_public, bool)
+            body['is_public'] = is_public
+
+        return self.execute(PUT(uri='groupings/{}'.format(field_grouping_id))
+                            .body(body))
+
+    '''
+    DEL /groupings/:grouping_id
+
+    '''
+    def deleteFieldGrouping(self, field_grouping_id):
+
+        assert isinstance(field_grouping_id, str)
+
+        return self.execute(DELETE(uri='groupings/{}'.format(field_grouping_id)))
+
+    '''
+    POST /groupings/:grouping_id/fields/:field_id
+
+    '''
+    def addFieldToGrouping(self, field_grouping_id, field_id):
+
+        assert isinstance(field_grouping_id, str)
+        assert isinstance(field_id, int)
+
+        return self.execute(POST(uri='groupings/{}/fields/{}'.format(field_grouping_id, field_id)))
+
+    '''
+    DEL /groupings/:grouping_id/fields/:field_id
+
+    '''
+    def removeFieldFromGrouping(self, field_grouping_id, field_id):
+
+        assert isinstance(field_grouping_id, str)
+        assert isinstance(field_id, int)
+
+        return self.execute(DELETE(uri='groupings/{}/fields/{}'.format(field_grouping_id, field_id)))
+
+    '''
+    POST /groupings/:grouping_id/fields
+
+    '''
+    def setFieldsToGrouping(self, field_grouping_id, field_list):
+
+        assert isinstance(field_grouping_id, str)
+        assert not isinstance(field_list, basestring)
+
+        test = [True if isinstance(field_id, int) else False for field_id in field_list]
+        if False in test:
+            raise Exception('All elements in the field_list must be integers (FeedsService.setFieldsToGrouping)')
+
+        body = {'fields': field_list}
+
+        return self.execute(POST(uri='groupings/{}/fields'.format(field_grouping_id))
+                            .body(body))
