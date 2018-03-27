@@ -58,6 +58,8 @@ class BaseWorker(ConfiguredComponent):
         configValues = self.contxt.getConfigurationByClient(self.env)
         config = {}
 
+        self.configuration_id = configValues['id']
+
         for value in configValues['ConfigurationValues']:
 
             configValue = {}
@@ -78,8 +80,6 @@ class BaseWorker(ConfiguredComponent):
 
             # store config dict
             config[value['key']] = configValue
-
-            self.configuration_id = value['configuration_id']
 
         return config
 
