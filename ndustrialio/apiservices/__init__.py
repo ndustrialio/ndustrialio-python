@@ -1,35 +1,36 @@
 import requests
 import os
-from auth0.v2.authentication import Oauth
 import json
 from datetime import datetime
 import pytz
 from tzlocal import get_localzone
+from auth0.v2.authentication import Oauth
 
 API_VERSION = 'v1'
 
 BASE_URL = 'http://api.ndustrial.io'
 
+AUTH_URL = 'https://contxtauth.com'
 AUTH0_URL = 'ndustrialio.auth0.com'
+
 
 def delocalize_datetime(dt_object):
     localized_dt = get_localzone().localize(dt_object)
     return localized_dt.astimezone(pytz.utc)
 
+
 def get_epoch_time(dt_object):
     if dt_object.tzinfo is None:
-        tz_aware_date = get_localzone().localize(dt_object)
-    else:
-        tz_aware_date = dt_object
-    
-    utc_1970 = datetime(1970, 1, 1).replace(tzinfo=pytz.utc)
-    
-    return int((delocalize_datetime(dt_object) - utc_1970).total_seconds())
+        # assuming an naive datetime is in the callers timezone
+        # as set on the system,
+        dt_object = get_localzone().localize(dt_object)
 
+    utc_1970 = datetime(1970, 1, 1).replace(tzinfo=pytz.utc)
+
+    return int((dt_object.astimezone(pytz.utc) - utc_1970).total_seconds())
 
 
 class ApiClient(object):
-
     def __init__(self, access_token):
 
         self.access_token = access_token
@@ -37,29 +38,38 @@ class ApiClient(object):
     def execute(self, api_request):
 
         headers = {}
+        retries = 3
+        status = -1
 
-        # authorize this request?
-        if api_request.authorize():
-            headers['Authorization'] = 'Bearer ' + self.access_token
+        response = None
 
-        if api_request.method() == 'GET':
-            response=requests.get(url=str(api_request), headers=headers)
-        if api_request.method() == 'POST':
-            if api_request.content_type == ApiRequest.URLENCODED_CONTENT_TYPE:
-                response = requests.post(url=str(api_request), data=api_request.body(), headers=headers)
-            else:
-                response = requests.post(url=str(api_request), json=api_request.body(), headers=headers)
-        if api_request.method() == 'PUT':
-            response=requests.put(url=str(api_request), data=api_request.body(), headers=headers)
-        if api_request.method() == 'DELETE':
-            response=requests.delete(url=str(api_request), headers=headers)
+        while status in [-1, 504] and retries > 0:
+
+            # authorize this request?
+            if api_request.authorize():
+                headers['Authorization'] = 'Bearer ' + self.access_token
+
+            if api_request.method() == 'GET':
+                response = requests.get(url=str(api_request), headers=headers)
+            if api_request.method() == 'POST':
+                if api_request.content_type == ApiRequest.URLENCODED_CONTENT_TYPE:
+                    response = requests.post(url=str(api_request), data=api_request.body(), headers=headers)
+                else:
+                    response = requests.post(url=str(api_request), json=api_request.body(), headers=headers)
+            if api_request.method() == 'PUT':
+                response = requests.put(url=str(api_request), data=api_request.body(), headers=headers)
+            if api_request.method() == 'DELETE':
+                response = requests.delete(url=str(api_request), headers=headers)
+
+            status = response.status_code
+            retries -= 1
 
         return self.process_response(response)
 
     def process_response(self, response):
 
         # throw an exception in case of a status problem
-        #response.raise_for_status()
+        # response.raise_for_status()
 
         # lifted the following code from requests/models.py and modified it
         http_error_msg = ''
@@ -75,7 +85,6 @@ class ApiClient(object):
         elif 500 < response.status_code < 600:
             http_error_msg = '%s Server Error: %s - %s' % (response.status_code, response.reason, response.text)
 
-
         if http_error_msg:
             raise requests.exceptions.HTTPError(http_error_msg, response=self)
 
@@ -87,26 +96,23 @@ class ApiClient(object):
 
 
 class PagedResponse(object):
-
     def __init__(self, data):
-
         self.total_records = data['_metadata']['totalRecords']
         self.offset = data['_metadata']['offset']
 
         self.records = data['records']
 
     def first(self):
-
         return self.records[0]
 
     def __iter__(self):
         for record in self.records:
             yield record
 
-class DataResponse(object):
 
+class DataResponse(object):
     def __init__(self, data, client):
-        self.client = client;
+        self.client = client
         self.count = data['meta']['count']
         self.has_more = data['meta']['has_more']
 
@@ -124,7 +130,7 @@ class DataResponse(object):
                 yield record
 
             if self.has_more:
-                #print 'Requesting more records..'
+                # print 'Requesting more records..'
                 response = self.client.execute(StringRequest(self.next_page_url).method('GET'))
 
                 self.count = response['meta']['count']
@@ -139,10 +145,7 @@ class DataResponse(object):
                 break
 
 
-
-
 class StringRequest(object):
-
     URLENCODED_CONTENT_TYPE = 'application/x-www-form-urlencoded'
     JSON_CONTENT_TYPE = 'application/json'
 
@@ -152,7 +155,7 @@ class StringRequest(object):
         # authorize request, default true
         self.authorize_request = True
 
-        self.http_content_type=self.JSON_CONTENT_TYPE
+        self.http_content_type = self.JSON_CONTENT_TYPE
 
         self.http_body = {}
 
@@ -192,30 +195,29 @@ class StringRequest(object):
     def __str__(self):
         return self.request_string
 
-class ApiRequest(object):
 
+class ApiRequest(object):
     URLENCODED_CONTENT_TYPE = 'application/x-www-form-urlencoded'
     JSON_CONTENT_TYPE = 'application/json'
 
-    def __init__(self, uri):
+    def __init__(self, uri, authorize=True):
 
         self.uri = uri
 
         self.http_base_url = None
 
         # authorize request, default true
-        self.authorize_request = True
+        self.authorize_request = authorize
 
-        self.http_content_type=self.JSON_CONTENT_TYPE
+        self.http_content_type = self.JSON_CONTENT_TYPE
 
-        self.http_params={}
+        self.http_params = {}
 
         self.api_version = True
 
         self.http_method = None
 
         self.http_body = {}
-
 
     def params(self, params=None):
 
@@ -283,15 +285,14 @@ class ApiRequest(object):
 
         request_chunks.append(self.uri)
 
-
         # append params
         if self.http_params:
-            param_string='?'
+            param_string = '?'
 
             param_list = []
 
             for p, v in self.http_params.items():
-                param_list.append(p+'='+str(v))
+                param_list.append(p + '=' + str(v))
 
             param_string += '&'.join(param_list)
 
@@ -304,51 +305,41 @@ class ApiRequest(object):
 
 
 class GET(ApiRequest):
-
-    def __init__(self, uri):
-
-        super(GET, self).__init__(uri)
+    def __init__(self, uri, authorize=True):
+        super(GET, self).__init__(uri, authorize)
 
     def method(self, method=None):
-
         return 'GET'
 
+
 class POST(ApiRequest):
-
-    def __init__(self, uri):
-
-        super(POST, self).__init__(uri)
+    def __init__(self, uri, authorize=True):
+        super(POST, self).__init__(uri, authorize)
 
     def method(self, method=None):
-
         return 'POST'
 
+
 class PUT(ApiRequest):
-
-    def __init__(self, uri):
-
-        super(PUT, self).__init__(uri)
+    def __init__(self, uri, authorize=True):
+        super(PUT, self).__init__(uri, authorize)
 
     def method(self, method=None):
-
         return 'PUT'
 
+
 class DELETE(ApiRequest):
-
-    def __init__(self, uri):
-
-        super(DELETE, self).__init__(uri)
+    def __init__(self, uri, authorize=True):
+        super(DELETE, self).__init__(uri, authorize)
 
     def method(self, method=None):
-
         return 'DELETE'
 
 
 class ApiService(object):
-
     def __init__(self):
 
-        self.client=None
+        self.client = None
 
     def baseURL(self):
 
@@ -366,24 +357,49 @@ class ApiService(object):
             return api_request.base_url(self.baseURL())
 
 
-class Service(ApiService):
+class AuthService(ApiService):
+    def __init__(self, auth_url):
+        super(AuthService, self).__init__()
+        self.url = auth_url
+        self.client = ApiClient(None)
 
-    def __init__(self, client_id, client_secret = None):
+    def baseURL(self):
+        return self.url
+
+    def machine_login(self, client_id, client_secret, audience):
+        body = {'client_id': client_id,
+                'client_secret': client_secret,
+                'grant_type': 'client_credentials',
+                'audience': audience}
+
+        return self.execute(POST(uri='oauth/token', authorize=False).body(body))
+
+
+class Service(ApiService):
+    def __init__(self, client_id, client_secret=None, enable_legacy_auth=False):
 
         super(Service, self).__init__()
-
-        # need to login to get JWT token
-        oauth = Oauth(AUTH0_URL)
 
         if client_secret is None:
             client_secret = os.environ.get('CLIENT_SECRET')
 
         assert client_secret is not None
 
-        token = oauth.login(client_id=client_id,
-                            client_secret= client_secret,
-                            audience=self.audience(),
-                            grant_type='client_credentials')
+        if enable_legacy_auth:
+            oauth = Oauth(AUTH0_URL)
+
+            token = oauth.login(client_id=client_id,
+                                client_secret=client_secret,
+                                audience=self.audience(),
+                                grant_type='client_credentials')
+
+        else:
+            # need to login to get JWT token
+            auth = AuthService(AUTH_URL)
+
+            token = auth.machine_login(client_id=client_id,
+                                       client_secret=client_secret,
+                                       audience=self.audience())
 
         self.client = ApiClient(access_token=token['access_token'])
 
@@ -391,10 +407,9 @@ class Service(ApiService):
 
         return 'base_audience'
 
+
 class LegacyService(ApiService):
-
-    def __init__(self, access_token = None):
-
+    def __init__(self, access_token=None):
         super(LegacyService, self).__init__()
 
         if access_token is None:
@@ -407,12 +422,11 @@ class LegacyService(ApiService):
     def baseURL(self):
         return BASE_URL
 
-class BatchService(LegacyService):
 
+class BatchService(LegacyService):
     def __init__(self, access_token=None):
 
         super(BatchService, self).__init__(access_token=access_token)
-
 
     def batchRequest(self, requests):
 

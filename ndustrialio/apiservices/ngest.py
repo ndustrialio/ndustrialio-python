@@ -1,4 +1,4 @@
-from apiservices import *
+from ndustrialio.apiservices import LegacyService, POST
 
 class NgestService(LegacyService):
 
@@ -11,4 +11,4 @@ class NgestService(LegacyService):
 
     def sendData(self, feedToken, feedKey, data, execute=True):
         return self.execute(POST(uri='{}/ngest/{}'.format(feedToken, feedKey))
-                            .params(data).authorize(False), execute=execute)
+                            .body(data).authorize(False), execute=execute)

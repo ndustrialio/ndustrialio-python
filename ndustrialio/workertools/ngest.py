@@ -1,132 +1,90 @@
-import requests
-import traceback
 import json
-from pytz import timezone as TimeZone
 from ndustrialio.apiservices.ngest import NgestService
 import pytz
 
+MAX_MESSAGE_FIELDS = 50
+TIMESERIES_TYPE = 'timeseries'
 
-class NgestTypeError(Exception):
-    pass
 
-
-class NgestClient():
-    def __init__(self, feed_key, feed_token, feed_timezone):
+class Message(object):
+    def __init__(self, feed_key):
+        self.data = {}
+        self.size = 0
         self.feed_key = feed_key
-        self.feed_token = feed_token
-        self.feed_timezone = feed_timezone
-        self.ngestService = NgestService()
 
-    def sendData(self, nGestDataObject):
+    def add_value(self, timestamp, field, value):
 
-        # delocalize all timestamps in the data object
-        nGestDataObject.delocalizeAllTimestamps(self.feed_timezone)
+        if self.size == MAX_MESSAGE_FIELDS:
+            return False
 
         try:
-            dataToSend = nGestDataObject.getJsonData()
-            for dataObj in dataToSend:
-                self.ngestService.sendData(self.feed_token, self.feed_key, dataObj)
-        except Exception as e:
-            traceback.print_exc()
-            return False
+            field_map = self.data[timestamp]
+
+        except KeyError:
+            field_map = {}
+            self.data[timestamp] = field_map
+
+        if field not in field_map:
+            field_map[field] = {"value": str(value)}
+            self.size += 1
+        else:
+            raise Exception('Field: ' + field + ' already present at timestamp: ' + timestamp)
+
         return True
 
+    def pre_serialize(self):
+        serialize_map = {}
+        serialize_map['type'] = TIMESERIES_TYPE
+        data_arr = []
 
-class NonUniqueFieldIDException(Exception):
-    pass
+        for timestamp, fields in self.data.iteritems():
+            data_map = {'timestamp': timestamp,
+                        'data': fields}
+            data_arr.append(data_map)
+
+        serialize_map['data'] = data_arr
+        serialize_map['feedKey'] = self.feed_key
+        return serialize_map
+
+    def __str__(self):
+        return json.dumps(self.pre_serialize())
 
 
-class NgestTimeSeriesDataObject():
-    def __init__(self, feedKey):
-        self.dataObj = {}
-        self.dataObj['feedKey'] = feedKey
-        self.dataObj['type'] = 'timeseries'
-        self.dataObj['data'] = {}
-        self.tsData = self.dataObj['data']
+class TimeSeries(object):
+    def __init__(self, feed_key):
+        self.messages = [
+            Message(feed_key)]
+        self.feed_key = feed_key
 
-    def delocalizeAllTimestamps(self, toTimezone):
-        tz = TimeZone(toTimezone)
-        newDateObj = {}
-        for timeObj in self.tsData:
-            print ('Old time: ' + str(timeObj))
-            if timeObj.tzinfo is not None:
-                print ('No need to convert time...already localized')
-                newDateObj[str(timeObj)] = self.tsData[timeObj]
-                continue
-            localDateObj = tz.localize(timeObj)
-            utcDateObj = localDateObj.astimezone(pytz.utc)
-            print ('New time: ' + str(utcDateObj))
-            newDateObj[str(utcDateObj)] = self.tsData[timeObj]
-        self.tsData = newDateObj
+    def add_value(self, timestamp, field, value):
+        if timestamp.tzinfo is None or timestamp.tzinfo.utcoffset(timestamp) is None:
+            raise Exception('Please use timezone-aware datetimes with nGest')
 
-    def addTimeValue(self, timeObj, field_id, value):
-        if timeObj not in self.tsData:
-            self.tsData[timeObj] = {}
-        if field_id in self.tsData[timeObj]:
-            raise NonUniqueFieldIDException(
-                'Field ID: %s already exists in time series at timestamp %s' % (str(field_id), str(timeObj)))
-        self.tsData[timeObj][field_id] = {'value': str(value)}
+        delocalized = timestamp.astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S')
 
-    def getFeedKey(self):
-        return self.dataObj['feedKey']
+        if not self.messages[-1].add_value(delocalized, field, value):
+            self.messages.append(Message(self.feed_key))
+            self.messages[-1].add_value(delocalized, field, value)
 
-    def getFieldKeys(self):
-        fieldKeys = []
-        for ts in self.tsData:
-            for key in self.tsData[ts]:
-                fieldKeys.append(key)
-        return fieldKeys
+        return
 
-    def getJsonData(self):
-        sortedData = []
-        timestamps = sorted(self.tsData.keys())
+    def __iter__(self):
+        for message in self.messages:
+            yield message.pre_serialize()
 
-        ### check to see how big the data is
-        maxBucketLength = 50
-        for timestamp in timestamps:
-            print (timestamp)
-            for chunk in self.dataChunks(self.tsData[timestamp].keys(), maxBucketLength):
-                chunkDict = {}
-                for key in chunk:
-                    chunkDict[key] = self.tsData[timestamp][key]
-                sortedData.append({'timestamp': timestamp,
-                                   'data': chunkDict
-                                   })
-        exportData = []
-        for data in sortedData:
-            exportedDataObj = self.dataObj.copy()
-            exportedDataObj['data'] = [data]
-            exportData.append(json.dumps(exportedDataObj))
 
-        return exportData
+class Ngest(object):
+    def __init__(self, feed_key, feed_token):
+        self.feed_key = feed_key
+        self.feed_token = feed_token
+        self.time_series = TimeSeries(feed_key)
 
-    def dataChunks(self, theList, chunkSize):
-        for i in xrange(0, len(theList), chunkSize):
-            yield theList[i:i + chunkSize]
+    def add_value(self, timestamp, field, value):
+        self.time_series.add_value(timestamp, field, value)
 
-    def toJson(self):
-        sortedData = []
+    def send_data(self):
+        ngest_service = NgestService()
+        for message in self.time_series:
+            ngest_service.sendData(self.feed_token, self.feed_key, message)
 
-        timestamps = sorted(self.tsData.keys())
-
-        for timestamp in timestamps:
-            sortedData.append({'timestamp': timestamp,
-                               'data': self.tsData[timestamp]})
-
-        exportedDataObj = self.dataObj.copy()
-        exportedDataObj['data'] = sortedData
-        return json.dumps(exportedDataObj)
-
-    def toJsonObj(self):
-        sortedData = []
-
-        timestamps = sorted(self.tsData.keys())
-
-        for timestamp in timestamps:
-            sortedData.append({'timestamp': timestamp,
-                               'data': self.tsData[timestamp]})
-
-        exportedDataObj = self.dataObj.copy()
-        exportedDataObj['data'] = sortedData
-        return exportedDataObj
-
+        self.time_series = TimeSeries(self.feed_key)

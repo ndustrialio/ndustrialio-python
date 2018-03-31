@@ -41,3 +41,12 @@ class ContxtService(Service):
                             .body(body={'key': str(key), 'value': str(value)}),
                             execute=execute)
 
+    def getOrganizationUsers(self, organization_id, execute=True):
+
+        assert isinstance(organization_id, str)
+
+        return self.execute(GET(uri='/organizations/{}/users'.format(organization_id)), execute=execute)
+
+    def syncUser(self, user_id, execute=True):
+
+        return self.execute(GET(uri='/users/{}/sync'.format(user_id)), execute=execute)
