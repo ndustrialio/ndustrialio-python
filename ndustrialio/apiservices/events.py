@@ -25,11 +25,14 @@ class EventsService(Service):
 
     Returns collection of event types
     '''
-    def getEventTypesForClient(self, client_id, execute=True):
+    def getEventTypesForClient(self, client_id, limit=1000, offset=0, execute=True):
 
         assert isinstance(client_id, str)
 
-        return PagedResponse(self.execute(GET(uri='clients/{}/types'.format(client_id)), execute=execute))
+        params = {'limit': limit,
+                  'offset': offset}
+
+        return PagedResponse(self.execute(GET(uri='clients/{}/types'.format(client_id)).params(params), execute=execute))
 
     '''
     getEventTypes
@@ -94,11 +97,14 @@ class EventsService(Service):
 
     Returns collection of event objects
     '''
-    def getEventsForType(self, event_type_id, execute=True):
+    def getEventsForType(self, event_type_id, limit=1000, offset=0, execute=True):
 
         assert isinstance(event_type_id, str)
 
-        return PagedResponse(self.execute(GET(uri='types/{}/events'.format(event_type_id)), execute=execute))
+        params = {'limit': limit,
+                  'offset': offset}
+
+        return PagedResponse(self.execute(GET(uri='types/{}/events'.format(event_type_id)).params(params), execute=execute))
 
     '''
     getEventsForClient
@@ -241,11 +247,22 @@ class EventsService(Service):
 
     Returns a list of triggered events
     '''
-    def getTriggeredEvents(self, event_id, execute=True):
+    def getTriggeredEvents(self, event_id, limit=1000, offset=0, orderBy=None, reverseOrder=None, execute=True):
 
         assert isinstance(event_id, str)
 
-        return PagedResponse(self.execute(GET(uri='/events/{}/triggered'.format(event_id)), execute=execute))
+        params = {'limit': limit,
+                  'offset': offset}
+
+        if orderBy:
+            assert isinstance(orderBy, str)
+            params['orderBy'] = orderBy
+
+        if reverseOrder:
+            assert isinstance(reverseOrder, bool)
+            params['reverseOrder'] = reverseOrder
+
+        return PagedResponse(self.execute(GET(uri='/events/{}/triggered'.format(event_id)).params(params), execute=execute))
 
 
     '''
