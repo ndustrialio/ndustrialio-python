@@ -223,11 +223,11 @@ class EventsService(Service):
         assert isinstance(event_id, str)
         assert isinstance(trigger_start_at, datetime)
 
-        body = {'trigger_start_at': trigger_start_at}
+        body = {'trigger_start_at': str(trigger_start_at)}
 
         if trigger_end_at:
             assert isinstance(trigger_end_at, datetime)
-            body['trigger_end_at'] = trigger_end_at
+            body['trigger_end_at'] = str(trigger_end_at)
         if data:
             assert isinstance(data, dict)
             body['data'] = data
@@ -299,11 +299,11 @@ class EventsService(Service):
         body = {}
         if trigger_start_at:
             assert isinstance(trigger_start_at, datetime)
-            body['trigger_start_at'] = trigger_start_at
+            body['trigger_start_at'] = str(trigger_start_at)
 
         if trigger_end_at:
             assert isinstance(trigger_end_at, datetime)
-            body['trigger_end_at'] = trigger_end_at
+            body['trigger_end_at'] = str(trigger_end_at)
         if data:
             assert isinstance(data, dict)
             body['data'] = data
