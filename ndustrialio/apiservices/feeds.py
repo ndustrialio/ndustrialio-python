@@ -121,17 +121,18 @@ class FeedsService(Service):
                                 .format(feed_id, field_descriptor))
                                 .params(params), execute=execute)
 
-    def getData(self, output_id, field_human_name, window, time_start, time_end=None, limit=100, execute=True):
+    def getData(self, output_id, field_human_name, window, time_start=None, time_end=None, limit=100, execute=True):
 
         # assert isinstance(output_id, int)
         # assert isinstance(field_human_name, basestring)
         # assert isinstance(time_start, datetime)
         # assert window in [0, 60, 900, 3600]
 
-        params = {'timeStart': str(get_epoch_time(time_start)),
-                    'window': str(window),
-                    'limit': limit}
+        params = {'window': str(window),
+                  'limit': limit}
 
+        if time_start:
+            params['timeStart'] = str(get_epoch_time(time_start))
         if time_end:
             params['timeEnd'] = str(get_epoch_time(time_end))
 
