@@ -134,17 +134,21 @@ class EventsService(Service):
 
     Returns created event object
     '''
-    def createEvent(self, event_type_id, organization_id, name, facility_id=None, execute=True):
+    def createEvent(self, event_type_id, organization_id, name, is_public, allow_others_to_trigger=True, facility_id=None, execute=True):
 
         assert isinstance(event_type_id, str)
         assert isinstance(organization_id, str)
         assert isinstance(name, str)
+        assert isinstance(is_public, bool)
+        assert isinstance(allow_others_to_trigger, bool)
         if facility_id:
             assert isinstance(facility_id, int)
 
         event_obj = {'event_type_id': event_type_id,
                      'organization_id': organization_id,
-                     'name': name
+                     'name': name,
+                     'is_public': is_public,
+                     'allow_others_to_trigger': allow_others_to_trigger
                      }
 
         if facility_id:
