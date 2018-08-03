@@ -23,6 +23,9 @@ class FlywheelingService(Service):
     def getSystemsForFacility(self, facility_id, execute=True):
         return self.execute(GET(uri='facilities/{}/systems'.format(facility_id)), execute)
 
+    def getZonesForSystem(self, system_id, execute=True):
+        return self.execute(GET(uri='systems/{}/zones'.format(system_id)), execute)
+
     def getRoomsForSystem(self, system_id, execute=True):
       return self.execute(GET(uri='systems/{}/rooms'.format(system_id)), execute)
 
