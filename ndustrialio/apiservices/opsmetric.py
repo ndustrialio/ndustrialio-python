@@ -1,7 +1,7 @@
 from ndustrialio.apiservices import *
 
 
-class OpsmetricService(LegacyService):
+class OpsmetricService(Service):
 
 
     def __init__(self, access_token=None):

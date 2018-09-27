@@ -1,6 +1,6 @@
 from ndustrialio.apiservices import *
 
-class WorkerService(LegacyService):
+class WorkerService(Service):
 
     def __init__(self, access_token=None):
 

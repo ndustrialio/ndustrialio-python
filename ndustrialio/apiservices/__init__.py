@@ -1,16 +1,17 @@
 import requests
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 from tzlocal import get_localzone
-from auth0.v2.authentication import Oauth
+from auth0.v3.authentication import GetToken
+import jwt
 
 API_VERSION = 'v1'
 
 BASE_URL = 'http://api.ndustrial.io'
 
-AUTH_URL = 'https://contxtauth.com'
+CONTXT_AUTH_URL = 'contxtauth.com/v1'
 AUTH0_URL = 'ndustrialio.auth0.com'
 
 
@@ -31,9 +32,32 @@ def get_epoch_time(dt_object):
 
 
 class ApiClient(object):
-    def __init__(self, access_token):
+    def __init__(self, auth_enabled=False, caller_client_id=None, caller_client_secret=None, service_audience=None,
+                 service_issuer=None):
 
-        self.access_token = access_token
+        self.auth_enabled = auth_enabled
+        self.access_token = None
+        self.caller_client_id = caller_client_id
+        self.caller_client_secret = caller_client_secret
+        self.service_audience = service_audience
+        self.service_issuer = service_issuer
+
+        # variables stored if we have auth enabled so we can keep track of expirations
+        self.oauth_client = GetToken(service_issuer)
+        self.jwt_payload = None
+        self.token_expiration_time = None
+
+        if auth_enabled:
+            self.get_new_token()
+
+    def get_new_token(self):
+        token = self.oauth_client.client_credentials(client_id=self.caller_client_id,
+                                                     client_secret=self.caller_client_secret,
+                                                     audience=self.service_audience)
+
+        self.access_token = token['access_token']
+        self.jwt_payload = jwt.decode(self.access_token, verify=False)
+        self.token_expiration_time = datetime.fromtimestamp(int(self.jwt_payload['exp']))
 
     def execute(self, api_request):
 
@@ -42,6 +66,13 @@ class ApiClient(object):
         status = -1
 
         response = None
+
+        # check to see if the token is expired (or within 5 minutes of being expired)
+        if self.access_token and (datetime.now() >= (self.token_expiration_time - timedelta(minutes=5))):
+            print('Token expired. Renewing')
+            self.get_new_token()
+        else:
+            print('Token is not expired. Current time is {} and the token expires at {}'.format(str(datetime.now()), str(self.token_expiration_time)))
 
         while status in [-1, 504] and retries > 0:
 
@@ -357,26 +388,8 @@ class ApiService(object):
             return api_request.base_url(self.baseURL())
 
 
-class AuthService(ApiService):
-    def __init__(self, auth_url):
-        super(AuthService, self).__init__()
-        self.url = auth_url
-        self.client = ApiClient(None)
-
-    def baseURL(self):
-        return self.url
-
-    def machine_login(self, client_id, client_secret, audience):
-        body = {'client_id': client_id,
-                'client_secret': client_secret,
-                'grant_type': 'client_credentials',
-                'audience': audience}
-
-        return self.execute(POST(uri='oauth/token', authorize=False).body(body))
-
-
 class Service(ApiService):
-    def __init__(self, client_id, client_secret=None, enable_legacy_auth=False):
+    def __init__(self, client_id, client_secret=None, service_issuer=CONTXT_AUTH_URL):
 
         super(Service, self).__init__()
 
@@ -385,48 +398,21 @@ class Service(ApiService):
 
         assert client_secret is not None
 
-        if enable_legacy_auth:
-            oauth = Oauth(AUTH0_URL)
-
-            token = oauth.login(client_id=client_id,
-                                client_secret=client_secret,
-                                audience=self.audience(),
-                                grant_type='client_credentials')
-
-        else:
-            # need to login to get JWT token
-            auth = AuthService(AUTH_URL)
-
-            token = auth.machine_login(client_id=client_id,
-                                       client_secret=client_secret,
-                                       audience=self.audience())
-
-        self.client = ApiClient(access_token=token['access_token'])
+        self.client = ApiClient(auth_enabled=True,
+                                caller_client_id=client_id,
+                                caller_client_secret=client_secret,
+                                service_audience=self.audience(),
+                                service_issuer=service_issuer)
 
     def audience(self):
 
         return 'base_audience'
 
 
-class LegacyService(ApiService):
-    def __init__(self, access_token=None):
-        super(LegacyService, self).__init__()
+class BatchService(Service):
+    def __init__(self, client_id, client_secret):
 
-        if access_token is None:
-            access_token = os.environ.get('ACCESS_TOKEN')
-
-        assert access_token is not None
-
-        self.client = ApiClient(access_token=access_token)
-
-    def baseURL(self):
-        return BASE_URL
-
-
-class BatchService(LegacyService):
-    def __init__(self, access_token=None):
-
-        super(BatchService, self).__init__(access_token=access_token)
+        super(BatchService, self).__init__(client_id=client_id, client_secret=client_secret)
 
     def batchRequest(self, requests):
 

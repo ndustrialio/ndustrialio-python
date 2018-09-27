@@ -1,6 +1,6 @@
-from ndustrialio.apiservices import LegacyService, POST
+from ndustrialio.apiservices import Service, POST
 
-class NgestService(LegacyService):
+class NgestService(Service):
 
     def __init__(self):
 

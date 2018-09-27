@@ -13,7 +13,9 @@ setup(name='ndustrialio-python',
         'tzlocal',
         'requests',
         'scipy',
-        'numpy'
+        'numpy',
+	'auth0-python',
+	'pyjwt'
       ],
       dependency_links=[
       ],
