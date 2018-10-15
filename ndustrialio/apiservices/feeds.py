@@ -361,7 +361,7 @@ class FeedsService(Service):
     def setFieldsToGrouping(self, field_grouping_id, field_list):
 
         assert isinstance(field_grouping_id, str)
-        assert not isinstance(field_list, basestring)
+        assert not isinstance(field_list, str)
 
         test = [True if isinstance(field_id, int) else False for field_id in field_list]
         if False in test:
