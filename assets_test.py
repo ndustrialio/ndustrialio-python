@@ -1,4 +1,6 @@
 from ndustrialio.apiservices.assets import Assets
+from datetime import datetime
+import os
 
 '''
 
@@ -64,20 +66,48 @@ Asset Values (for a given asset type)
 
 '''
 
-lineage_assets = Assets('1234')
+wp_assets = Assets('a8e526e4-cb2d-4188-ac25-294e76f9f467', os.environ.get('CLIENT_ID'))
 
-facilities = lineage_assets.Facility.getAll()
+facilities = wp_assets.Facility.getAll()
 
-lineage_assets.Facility.create(label='Mira Loma', description='My bomb ass facility')\
-    .withAttributes(zip_code=28625, square_feet=126000)
+#new_asset = lineage_assets.Facility.create(label='Mira Loma', description='My bomb ass facility')\
+#                .withAttributes(zip_code=28625, square_feet=126000)
+
+print(facilities)
+'''
+print(new_asset)
+print(new_asset.zip_code(1234, effective_date=datetime.now()))
+print(new_asset)
+new_asset.zip_code.set(9876, effective_date=datetime.now())
+print(new_asset)
+print(new_asset.zip_code())
+'''
 
 # can we really do this? you've an asset type id and a label of an asset, but there's no
 # restriction saying a label must be unique for a asset type. There could be a bunch of
 # these (Building 1 for example). What we could do is add a filter saying, "I want
 # Building 1 from this Facility (assuming we have a relationship defined in the future)"
-oxnard = lineage_assets.Facility.get('Oxnard') # this could return more than 1 record...
+oxnard = lineage_assets.Facility.get('Oxnard').first() # this could return more than 1 record...
+
+
+
+
 
 '''
+oxnard.loadAssets()
+oxnard_feeds = oxnard.IOT.Feeds.getAll()
+
+oxnard_rate_schedule = oxnard.Rates.getSchedule()
+
+oxnard.Utilities.Accounts.getAll()
+oxnard_meters = oxnard.Utilities.Meters.getAll()
+
+for meter in oxnard_meters:
+    statements = meter.Statements.getAll()
+    for statement in statements:
+        print(statement)
+
+
 #(come back to this...does this make sense to do?) facilities.zip_code.all()
 lineage_assets.Facility.create(label='Mira Loma')
 facilities.add(label='Mira Loma').withAttributes([])
