@@ -71,8 +71,6 @@ class ApiClient(object):
         if self.access_token and (datetime.now() >= (self.token_expiration_time - timedelta(minutes=5))):
             print('Token expired. Renewing')
             self.get_new_token()
-        else:
-            print('Token is not expired. Current time is {} and the token expires at {}'.format(str(datetime.now()), str(self.token_expiration_time)))
 
         while status in [-1, 504] and retries > 0:
 

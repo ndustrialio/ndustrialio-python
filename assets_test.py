@@ -1,4 +1,4 @@
-from ndustrialio.apiservices.assets import Assets
+from ndustrialio.apiservices.assets import Assets, AssetType
 from datetime import datetime
 import os
 
@@ -66,34 +66,59 @@ Asset Values (for a given asset type)
 
 '''
 
-wp_assets = Assets('a8e526e4-cb2d-4188-ac25-294e76f9f467', os.environ.get('CLIENT_ID'))
+wp_assets = Assets('59270c25-4de9-4b22-8e0b-ab287ac344ce', os.environ.get('CLIENT_ID'))
 
-facilities = wp_assets.Facility.getAll()
-
-#new_asset = lineage_assets.Facility.create(label='Mira Loma', description='My bomb ass facility')\
-#                .withAttributes(zip_code=28625, square_feet=126000)
-
-print(facilities)
 '''
-print(new_asset)
-print(new_asset.zip_code(1234, effective_date=datetime.now()))
-print(new_asset)
-new_asset.zip_code.set(9876, effective_date=datetime.now())
-print(new_asset)
-print(new_asset.zip_code())
+if wp_assets.hasType('EthanolProcessBatch'):
+    print('Has type already!')
+else:
+    print('Create it!')
+    wp_assets.newType(label='Ethanol Process Batch', description='A Propagation Batch')
 '''
 
+batch_type = wp_assets.EthanolProcessBatch()
+print(batch_type)
+
+batches = wp_assets.EthanolProcessBatch.getAll()
+for batch in batches:
+    print('Batch -> {}'.format(batch.label))
+    print('Attributes:')
+    print(batch.attributes())
+
+# create an asset and some attributes along with it
+test_asset = wp_assets.EthanolProcessBatch.create(label='Test Batch #10'.format(str(datetime.now())),
+                                                  description='Batch for testing purposes only')\
+                .withAttributes(batch_no=10,
+                                prop_duration=22,
+                                batch_end_at=str(datetime(year=2018, month=12, day=1, hour=23, minute=59)),
+                                batch_start_at=str(datetime(year=2018, month=12, day=1, hour=0, minute=0)),
+                                ferm_duration=23.9,
+                                avg_slurry_density=8.0,
+                                ethanol_at_prop_end=19.7)
+
+# update some attribute values
+test_asset.ferm_duration(72.4)
+test_asset.ethanol_at_prop_end.set(21.43)
+
+
+test_asset.metrics.hourly_slurry_density()
+
+
+
+
+
+
+
+
+'''
+
+-----------   EXAMPLES WE MIGHT WANT TO COVER   ----------
 # can we really do this? you've an asset type id and a label of an asset, but there's no
 # restriction saying a label must be unique for a asset type. There could be a bunch of
 # these (Building 1 for example). What we could do is add a filter saying, "I want
 # Building 1 from this Facility (assuming we have a relationship defined in the future)"
 oxnard = lineage_assets.Facility.get('Oxnard').first() # this could return more than 1 record...
 
-
-
-
-
-'''
 oxnard.loadAssets()
 oxnard_feeds = oxnard.IOT.Feeds.getAll()
 
