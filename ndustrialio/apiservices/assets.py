@@ -108,7 +108,7 @@ class Asset:
                                                                                      asset_attribute_obj=self.asset_type.attributes[key],
                                                                                      api_body=body)
             setattr(self, key, value)
-            setattr(self, key, self.attribute_values[key])
+            setattr(self, key, self.attribute_values[key].value)
 
         return self
 
@@ -120,6 +120,11 @@ class Asset:
             for item in attribute_values:
                 self.attribute_values[item.label] = item
                 setattr(self, item.label, item.value)
+
+            # Set None for attributes not populated
+            for key in self.asset_type.attributes:
+                if key not in self.attribute_values:
+                    setattr(self, key, None)
         return self.attribute_values
 
     def __str__(self):
@@ -130,6 +135,9 @@ class Asset:
         return "<Asset: asset_id: '{}', label: '{}', description: '{}', attributes: {}>".format(
             self.id, self.label, self.description, self.attribute_values)
 
+    def toJSON(self):
+        print(self.__dict__)
+        return self.__dict__
 
 class AssetList:
 
@@ -184,6 +192,16 @@ class AssetType:
             print('Getting all {} for organization_id {}'.format(self.label_plural, self.organization_id))
             self.assets = self.assets_instance.get_assets_for_type(self)
         return self.assets
+
+    # TODO cleanup
+    def toJSON(self):
+        obj = []
+        if len(self.assets) == 0:
+            self.getAll()
+
+        for asset in self.assets:
+            obj.append(asset.toJSON())
+
 
     # TODO - implement me
     def get(self, asset_label):
