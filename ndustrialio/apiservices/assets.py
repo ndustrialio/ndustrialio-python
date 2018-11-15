@@ -1,5 +1,5 @@
-import json
 import inflect
+
 from ndustrialio.apiservices import *
 
 p = inflect.engine()
@@ -48,11 +48,12 @@ class AssetAttributeValue:
                 setattr(self, key, value)
             if key == 'asset_attribute':
                 for attribute_key, attribute_value in value.items():
-                    setattr(self,  attribute_key, attribute_value)
+                    setattr(self, attribute_key, attribute_value)
 
     '''
         Update the value of an asset attribute value
     '''
+
     def set(self, value, effective_date=None):
         print('Setting new value for Attribute {} of Asset {} as {} with effective_date {}'
               .format(self.asset_attribute_obj.label, self.asset_obj.label, value, effective_date))
@@ -99,13 +100,16 @@ class Asset:
         print(kwargs)
         for key, value in kwargs.items():
             if key not in self.asset_type.attributes:
-                raise InvalidAttributeException("Attribute {} does not exist for type {}".format(key, self.asset_type.label))
+                raise InvalidAttributeException(
+                    "Attribute {} does not exist for type {}".format(key, self.asset_type.label))
             body = {'value': value,
-                    'effective_date': str(datetime(year=2018, month=1, day=1)) ## set this for now until FM-200 is fixed
+                    'effective_date': str(datetime(year=2018, month=1, day=1))
+                    ## set this for now until FM-200 is fixed
                     }
             # returns an AssetAttributeValue object
             self.attribute_values[key] = self.assets_instance.create_attribute_value(asset_obj=self,
-                                                                                     asset_attribute_obj=self.asset_type.attributes[key],
+                                                                                     asset_attribute_obj=
+                                                                                     self.asset_type.attributes[key],
                                                                                      api_body=body)
             setattr(self, key, value)
             setattr(self, key, self.attribute_values[key].value)
@@ -139,6 +143,7 @@ class Asset:
         print(self.__dict__)
         return self.__dict__
 
+
 class AssetList:
 
     def __init__(self, asset_type_obj):
@@ -146,7 +151,6 @@ class AssetList:
 
 
 class AssetType:
-
     valid_asset_create_fields = ['label', 'description']
 
     def __init__(self, assets_instance, organization_id, type_obj):
@@ -202,7 +206,6 @@ class AssetType:
         for asset in self.assets:
             obj.append(asset.toJSON())
 
-
     # TODO - implement me
     def get(self, asset_label):
         print('Getting asset with type {} and label {}'.format(self.label, asset_label))
@@ -257,11 +260,13 @@ class Assets(Service):
         type_class_obj.set_metrics(self.get_metrics_for_type(type_class_obj))
 
     def get_attributes_for_type(self, asset_type_obj):
-        attributes = PagedResponse(self.execute(GET(uri='assets/types/{}/attributes'.format(asset_type_obj.id)), execute=True))
+        attributes = PagedResponse(
+            self.execute(GET(uri='assets/types/{}/attributes'.format(asset_type_obj.id)), execute=True))
         return [AssetAttribute(asset_type_obj=asset_type_obj, api_object=record) for record in attributes]
 
     def get_metrics_for_type(self, asset_type_obj):
-        metrics = PagedResponse(self.execute(GET(uri='assets/types/{}/metrics'.format(asset_type_obj.id)), execute=True))
+        metrics = PagedResponse(
+            self.execute(GET(uri='assets/types/{}/metrics'.format(asset_type_obj.id)), execute=True))
         return [AssetMetric(asset_type_obj=asset_type_obj, api_object=record) for record in metrics]
 
     def get_assets_for_type(self, asset_type_obj):
@@ -284,6 +289,15 @@ class Assets(Service):
                                                                api_object=record)
                                            )
         return attribute_value_objects
+
+    def create_asset_type(self, type_name, description):
+        asset_type_response = self.execute(
+            POST(uri='/assets/types').body({
+                'label': type_name,
+                'description': description,
+                'organization_id': self.organization_id
+            }), execute=True)
+        return AssetType(assets_instance=self, organization_id=self.organization_id, type_obj=asset_type_response)
 
     def create_asset(self, asset_type_obj, api_body):
         asset_response = self.execute(POST(uri='/assets').body(api_body), execute=True)
@@ -321,7 +335,7 @@ class Assets(Service):
         return asset_config_by_org
 
     def _get_all_assets(self):
-        parameters = { 'organization_id': self.organization_id}
+        parameters = {'organization_id': self.organization_id}
         assets = PagedResponse(self.execute(GET(uri='assets').params(parameters), execute=True))
         return [Asset]
 
@@ -329,8 +343,4 @@ class Assets(Service):
         return hasattr(self, type_name)
 
     def newType(self, type_name, description):
-        type = AssetType(assets_instance=self, organization_id=self.organization_id,)
-
-
-
-
+        type = AssetType(assets_instance=self, organization_id=self.organization_id, )
