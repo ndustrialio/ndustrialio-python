@@ -299,6 +299,20 @@ class Assets(Service):
             }), execute=True)
         return AssetType(assets_instance=self, organization_id=self.organization_id, type_obj=asset_type_response)
 
+    def create_asset_attribute(self, asset_type_obj, label, description, data_type="string", is_required=False,
+                               units=None):
+        api_body = {
+            'label': label,
+            'description': description,
+            'organization_id': self.organization_id,
+            'data_type': data_type,
+            'units': units,
+            'is_required': is_required
+        }
+        uri = '/assets/types/{}/attributes'.format(asset_type_obj.id)
+        response = self.execute(POST(uri=uri).body(api_body), execute=True)
+        return AssetAttribute(asset_type_obj=asset_type_obj, api_object=response)
+
     def create_asset(self, asset_type_obj, api_body):
         asset_response = self.execute(POST(uri='/assets').body(api_body), execute=True)
         return Asset(assets_instance=self, asset_type_obj=asset_type_obj, api_object=asset_response)
