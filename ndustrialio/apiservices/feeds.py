@@ -242,3 +242,8 @@ class FeedsService(Service):
                             .body(body)
                             .params(params))
 
+    def getCategoriesForFacility(self, facility_id, execute=True):
+
+        assert isinstance(facility_id, int)
+
+        return self.execute(GET('facilities/{}/categories'.format(facility_id)), execute=execute)
