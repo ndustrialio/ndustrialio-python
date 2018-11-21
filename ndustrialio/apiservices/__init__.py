@@ -408,15 +408,22 @@ class Service(ApiService):
 
 
 class BatchService(Service):
-    def __init__(self, client_id, client_secret):
-
+    def __init__(self, client_id, client_secret, audience, url):
+        self._audience = audience
+        self._url = url
         super(BatchService, self).__init__(client_id=client_id, client_secret=client_secret)
+
+    def audience(self):
+        return self._audience
+
+    def baseURL(self):
+        return self._url
 
     def batchRequest(self, requests):
 
         batch_data = {}
 
-        for request_label, request in requests.iteritems():
+        for request_label, request in requests.items():
 
             r = {'method': request.method(),
                  'uri': str(request)}
