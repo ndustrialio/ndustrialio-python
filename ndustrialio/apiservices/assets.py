@@ -283,11 +283,15 @@ class Assets(Service):
         attribute_value_objects = []
         for record in values:
             # parse numeric types
-            if record['asset_attribute']['data_type'] == 'number':
-                try:
-                    record['value'] = float(record['value'])
-                except Exception:
-                    pass
+            try:
+                data_type = record['asset_attribute']['data_type']
+                if data_type == 'number':
+                        record['value'] = float(record['value'])
+                elif data_type == 'boolean':
+                        record['value'] = str(record['value']).lower() == 'true'
+            except Exception:
+                pass
+
             attribute_obj = asset_type_obj.attributes[record['asset_attribute']['label']]
             attribute_value_objects.append(AssetAttributeValue(assets_instance=self,
                                                                asset_obj=asset_obj,
