@@ -282,6 +282,9 @@ class Assets(Service):
         values = self.execute(GET(uri='assets/{}/attributes/values'.format(asset_obj.id)), execute=True)
         attribute_value_objects = []
         for record in values:
+            # parse numeric types
+            if record['asset_attribute']['data_type'] == 'number':
+                record['value'] = float(record['value'])
             attribute_obj = asset_type_obj.attributes[record['asset_attribute']['label']]
             attribute_value_objects.append(AssetAttributeValue(assets_instance=self,
                                                                asset_obj=asset_obj,
