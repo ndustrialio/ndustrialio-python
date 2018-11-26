@@ -284,7 +284,10 @@ class Assets(Service):
         for record in values:
             # parse numeric types
             if record['asset_attribute']['data_type'] == 'number':
-                record['value'] = float(record['value'])
+                try:
+                    record['value'] = float(record['value'])
+                except Exception:
+                    pass
             attribute_obj = asset_type_obj.attributes[record['asset_attribute']['label']]
             attribute_value_objects.append(AssetAttributeValue(assets_instance=self,
                                                                asset_obj=asset_obj,
