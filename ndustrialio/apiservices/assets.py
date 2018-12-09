@@ -157,6 +157,7 @@ class AssetType:
         self.id = type_obj['id']
         self.organization_id = organization_id
         self.label = type_obj['label']
+        self.parent_id = type_obj['parent_id']
         self.label_plural = p.plural(self.label)
         self.description = type_obj['description']
         self.is_global = True if self.organization_id is None else False
