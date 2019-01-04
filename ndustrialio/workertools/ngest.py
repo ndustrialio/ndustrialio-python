@@ -37,7 +37,7 @@ class Message(object):
         serialize_map['type'] = TIMESERIES_TYPE
         data_arr = []
 
-        for timestamp, fields in self.data.iteritems():
+        for timestamp, fields in self.data.items():
             data_map = {'timestamp': timestamp,
                         'data': fields}
             data_arr.append(data_map)
