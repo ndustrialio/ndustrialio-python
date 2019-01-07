@@ -15,7 +15,8 @@ setup(name='ndustrialio-python',
         'scipy',
         'numpy',
         'auth0-python',
-        'pyjwt'
+        'pyjwt',
+        'inflect'
       ],
       dependency_links=[
       ],
