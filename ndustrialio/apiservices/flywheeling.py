@@ -26,23 +26,42 @@ class FlywheelingService(Service):
     def getZonesForSystem(self, system_id, execute=True):
         return self.execute(GET(uri='systems/{}/zones'.format(system_id)), execute)
 
+    def getRoomsForSystem(self, system_id, execute=True):
+      return self.execute(GET(uri='systems/{}/rooms'.format(system_id)), execute)
+
+    def getZonesForRoom(self, room_id, execute=True):
+        return self.execute(GET(uri='rooms/{}/zones'.format(room_id)), execute)
+
     def createRun(self, run_obj):
         return self.execute(POST(uri='runs').body(run_obj))
 
     def addDataToRun(self, run_id, run_data):
         return self.execute(POST(uri='runs/{}/data'.format(run_id)).body(run_data))
 
-    def getFacilityAreas(self, facility_id, execute=True):
-        return self.execute(GET(uri='facilities/{}/areas'.format(facility_id)), execute)
+    def getFacilityRooms(self, facility_id, execute=True):
+        return self.execute(GET(uri='facilities/{}/rooms'.format(facility_id)), execute)
 
-    def addSensorToArea(self, area_id, sensor_id, execute=True):
-        return self.execute(POST(uri='areas/{}/sensors/{}'.format(area_id, sensor_id)))
+    def addFieldToRoom(self, room_id, field_id, execute=True):
+        return self.execute(POST(uri='rooms/{}/fields/{}'.format(room_id, field_id)))
 
-    def getSensorsForArea(self, area_id,limit=10, offset=0, execute=True):
+    def getSensorsForRoom(self, room_id, limit=10, offset=0, execute=True):
         params = {'limit': limit,
                   'offset': offset}
 
-        return PagedResponse(self.execute(GET(uri='areas/{}/sensors'.format(area_id)).params(params), execute))
+        return PagedResponse(self.execute(GET(uri='rooms/{}/fields'.format(room_id)).params(params), execute))
+
+    def addFieldToZone(self, zone_id, field_id, execute=True):
+        return self.execute(POST(uri='zone_id/{}/fields/{}'.format(zone_id, field_id)))
+
+    def getSensorsForZone(self, zone_id, limit=10, offset=0, execute=True):
+        params = {'limit': limit,
+                  'offset': offset}
+
+        return PagedResponse(self.execute(GET(uri='zones/{}/fields'.format(zone_id)).params(params), execute))
+
+    ## Entire JSON Config for the Facility
+    def getJsonForFacility(self, facility_id, execute=True):
+        return self.execute(GET(uri='facilities/{}/json'.format(facility_id)), execute)
 
     ## Scheme-based run
     def createRunForZone(self, zone_id, run_obj):
@@ -158,21 +177,24 @@ class FlywheelingService(Service):
         return self.execute(DELETE(uri='facilities/{}/runs/{}/output'.format(facility_id, run_id)), execute)
 
     # Creation of a zone
-    def createZoneForSystem(self, system_id, name, label, execute=True):
-        assert isinstance(system_id, str)
+    def createZoneForRoom(self, room_id, name, label, geometry_id, execute=True):
+        assert isinstance(room_id, room_id)
         assert isinstance(name, str)
         assert isinstance(label, str)
+        assert isinstance(geometry_id, str)
 
-        body = {'system_id': system_id,
+        body = {'geometry_id': name,
                 'name': name,
                 'label': label}
-        return self.execute(POST(uri='zones').body(body), execute)
+        return self.execute(POST(uri='rooms/{}/zones').format(room_id).body(body), execute)
 
-    # Creation of an area
-    def createAreaForFacility(self, facility_id, label, execute=True):
-        assert isinstance(facility_id, int)
+    # Creation of a Room
+    def createRoomForSystem(self, system_id, label, name, execute=True):
+        assert isinstance(system_id, str)
         assert isinstance(label, str)
+        assert isinstance(name, str)
 
         body = {'facility_id': facility_id,
+                'name': name,
                 'label': label}
-        return self.execute(POST(uri='areas').body(body), execute)
+        return self.execute(POST(uri='systems/{}/rooms').format(system_id).body(body), execute)
