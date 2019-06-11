@@ -194,7 +194,6 @@ class FlywheelingService(Service):
         assert isinstance(label, str)
         assert isinstance(name, str)
 
-        body = {'facility_id': facility_id,
-                'name': name,
+        body = {'name': name,
                 'label': label}
         return self.execute(POST(uri='systems/{}/rooms').format(system_id).body(body), execute)
