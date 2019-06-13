@@ -177,23 +177,24 @@ class FlywheelingService(Service):
         return self.execute(DELETE(uri='facilities/{}/runs/{}/output'.format(facility_id, run_id)), execute)
 
     # Creation of a zone
-    def createZoneForRoom(self, room_id, name, label, geometry_id, execute=True):
-        assert isinstance(room_id, room_id)
+    def createZoneForRoom(self, room_id, name, label, geometry_id):
+        assert isinstance(room_id, str)
         assert isinstance(name, str)
         assert isinstance(label, str)
         assert isinstance(geometry_id, str)
 
-        body = {'geometry_id': name,
+        body = {'room_id': room_id,
                 'name': name,
                 'label': label}
-        return self.execute(POST(uri='rooms/{}/zones').format(room_id).body(body), execute)
+        return self.execute(POST(uri='rooms/{}/zones'.format(room_id)).body(body))
 
     # Creation of a Room
-    def createRoomForSystem(self, system_id, label, name, execute=True):
+    def createRoomForSystem(self, system_id, label, name):
         assert isinstance(system_id, str)
         assert isinstance(label, str)
         assert isinstance(name, str)
 
-        body = {'name': name,
+        body = {'system_id': system_id,
+                'name': name,
                 'label': label}
-        return self.execute(POST(uri='systems/{}/rooms').format(system_id).body(body), execute)
+        return self.execute(POST(uri='systems/{}/rooms'.format(system_id)).body(body))
