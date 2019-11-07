@@ -20,7 +20,7 @@ class HealthService(Service):
     def audience(self):
         return '6uaQIV1KnnWhXiTm09iGDvy2aQaz2xVI'
 
-    def report(self, org_id, asset_id, status=HealthStatus.GOOD, timestamp=datetime.now(), execute=True):
+    def report(self, org_id, asset_id, status=HealthStatus.GOOD, timestamp=datetime.utcnow().isoformat(), execute=True):
         body = {
             status: status,
             timestamp: timestamp
