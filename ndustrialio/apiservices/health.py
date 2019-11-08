@@ -1,5 +1,6 @@
 from enum import Enum
 from datetime import datetime
+from pytz import UTC
 
 from ndustrialio.apiservices import Service, POST
 
