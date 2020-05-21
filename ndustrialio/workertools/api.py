@@ -7,7 +7,7 @@ from boto.s3.bucket import Bucket
 from boto.s3.key import Key
 from psycopg2 import IntegrityError
 
-#boto.config.add_section('Boto')
+boto.config.add_section('Boto')
 boto.config.set('Boto', 'http_socket_timeout', '10')
 
 class APIFileSaver():
