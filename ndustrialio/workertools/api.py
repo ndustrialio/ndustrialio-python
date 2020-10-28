@@ -103,14 +103,21 @@ class APIRateSchedule():
         self.schedule_id = schedule_id
         self.schedule = []
 
-    def getRateSchedule(self):
-        query = 'select * from rate_seasons inner join rate_season_periods rsp on rsp.rate_season_id=rate_seasons.id inner join usage_tier_rates utr on utr.rate_season_period_id=rsp.id  where rate_schedule_id=%s' % (
-        self.schedule_id)
+    def getUsageRateSchedule(self):
+        query = 'select * from energy_seasons inner join energy_season_periods esp on esp.energy_season_id=energy_seasons.id inner join energy_tier_rates etr on etr.energy_season_period_id=esp.id  where rate_schedule_id=%s' % (
+            self.schedule_id)
         rows = self.psql.complicatedSelectExecution(query, dictResults=True)
         for row in rows:
             self.schedule.append(row)
 
-    def rateTiersForDateAndValue(self, date, usageValue):
+    def getDemandRateSchedule(self):
+        query = 'select * from demand_seasons inner join demand_season_periods dsp on dsp.demand_season_id=demand_seasons.id inner join demand_tier_rates dtr on dtr.demand_season_period_id=dsp.id where rate_schedule_id=%s' % (
+            self.schedule_id)
+        rows = self.psql.complicatedSelectExecution(query, dictResults=True)
+        for row in rows:
+            self.schedule.append(row)
+
+    def rateTiersForDateAndValue(self, date, tierRateValue):
         month = date.month
         day = date.day
         weekday = date.weekday()
@@ -126,7 +133,7 @@ class APIRateSchedule():
                 continue
             if not (hour < schedule['hour_end'] and hour >= schedule['hour_start']):
                 continue
-            if not (usageValue <= schedule['unit_stop_value'] and usageValue >= schedule['unit_start_value']):
+            if not (tierRateValue <= schedule['unit_stop_value'] and tierRateValue >= schedule['unit_start_value']):
                 continue
 
             if matchedSchedule is not None:
