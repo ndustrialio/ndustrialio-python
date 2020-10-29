@@ -178,9 +178,9 @@ class APIRateSchedule():
             scheduleEndDate = DT.date(date.year, schedule['end_month'], schedule['end_day'])
             if not (scheduleStartDate <= date <= scheduleEndDate):
                 continue
-            if not (weekday <= schedule['day_of_week_end'] and weekday >= schedule['day_of_week_start']):
+            if not (schedule['day_of_week_end'] >= weekday >= schedule['day_of_week_start']):
                 continue
-            if not (usageValue <= schedule['unit_stop_value'] and usageValue >= schedule['unit_start_value']):
+            if not (schedule['unit_stop_value'] >= int(usageValue) >= schedule['unit_start_value']):
                 continue
 
             matchedSchedules.append(schedule)
